@@ -222,7 +222,7 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
               }}
             >
               <Image
-                src="/lidiane.jpg"
+                src="/lidiane.png"
                 alt="Lidiane Azevedo"
                 fill
                 style={{ objectFit: 'cover', objectPosition: 'center top' }}

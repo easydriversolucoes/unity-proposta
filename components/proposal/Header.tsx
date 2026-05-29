@@ -26,15 +26,23 @@ export function Header() {
         }}
       >
         {/* Logo — coloque seu arquivo em /public/logo.png */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Image
             src="/logo.png"
             alt="Unity Multas"
-            width={140}
+            width={40}
             height={40}
             style={{ objectFit: 'contain', height: '40px', width: 'auto' }}
             priority
           />
+          <div>
+            <div style={{ fontSize: '0.92rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F0F6FF', lineHeight: 1 }}>
+              Unity Multas
+            </div>
+            <div style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#4D6A8A', lineHeight: 1, marginTop: '3px' }}>
+              Lei Seca
+            </div>
+          </div>
         </div>
 
         {/* Nav */}
