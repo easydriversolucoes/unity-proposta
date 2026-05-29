@@ -23,8 +23,10 @@ export function ProposalPage({ proposal }: ProposalPageProps) {
       <ModalitiesSection
         valorEssencialPix={proposal.valor_essencial_pix}
         valorEssencialCartao={proposal.valor_essencial_cartao}
+        parcelasEssencial={proposal.parcelas_essencial}
         valorGestaoPix={proposal.valor_gestao_pix}
         valorGestaoCartao={proposal.valor_gestao_cartao}
+        parcelasGestao={proposal.parcelas_gestao}
       />
       <ResultsSection />
       <SignatureSection
@@ -33,8 +35,10 @@ export function ProposalPage({ proposal }: ProposalPageProps) {
         ait={proposal.ait}
         valorEssencialPix={proposal.valor_essencial_pix}
         valorEssencialCartao={proposal.valor_essencial_cartao}
+        parcelasEssencial={proposal.parcelas_essencial}
         valorGestaoPix={proposal.valor_gestao_pix}
         valorGestaoCartao={proposal.valor_gestao_cartao}
+        parcelasGestao={proposal.parcelas_gestao}
       />
       <Footer />
     </div>

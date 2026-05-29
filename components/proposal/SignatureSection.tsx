@@ -8,8 +8,10 @@ interface SignatureSectionProps {
   ait: string
   valorEssencialPix: number
   valorEssencialCartao: number
+  parcelasEssencial: number
   valorGestaoPix: number
   valorGestaoCartao: number
+  parcelasGestao: number
 }
 
 const fmt = (v: number) =>
@@ -26,8 +28,10 @@ export function SignatureSection({
   ait,
   valorEssencialPix,
   valorEssencialCartao,
+  parcelasEssencial,
   valorGestaoPix,
   valorGestaoCartao,
+  parcelasGestao,
 }: SignatureSectionProps) {
   const [plano, setPlano]   = useState<Plano>('essencial')
   const [pgto, setPgto]     = useState<Pgto>('pix')
@@ -35,12 +39,22 @@ export function SignatureSection({
   const [done, setDone]     = useState(false)
   const [isPending, startTransition] = useTransition()
 
-  const total = (() => {
-    if (plano === 'essencial') return pgto === 'pix' ? valorEssencialPix : valorEssencialCartao
-    return pgto === 'pix'
-      ? valorEssencialPix + valorGestaoPix
-      : valorEssencialCartao + valorGestaoCartao
-  })()
+  // Calcula total e parcelas conforme seleção
+  const totalPix = plano === 'essencial'
+    ? valorEssencialPix
+    : valorEssencialPix + valorGestaoPix
+
+  const totalCartao = plano === 'essencial'
+    ? valorEssencialCartao
+    : valorEssencialCartao + valorGestaoCartao
+
+  // Parcelas: se plano combinado, usa o maior número de parcelas entre os dois
+  const parcelas = plano === 'essencial'
+    ? parcelasEssencial
+    : Math.max(parcelasEssencial, parcelasGestao)
+
+  const total        = pgto === 'pix' ? totalPix : totalCartao
+  const valorParcela = totalCartao / parcelas
 
   function handleConfirm() {
     if (!agreed) return
@@ -49,6 +63,13 @@ export function SignatureSection({
       await acceptProposalAction(proposalId, key)
       setDone(true)
     })
+  }
+
+  // Label do total na linha de resumo
+  function totalLabel() {
+    if (pgto === 'pix') return fmt(totalPix)
+    if (parcelas > 1) return `${parcelas}x de ${fmt(valorParcela)} (total ${fmt(totalCartao)})`
+    return fmt(totalCartao)
   }
 
   return (
@@ -91,23 +112,18 @@ export function SignatureSection({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {([
-                  { value: 'essencial' as Plano, label: 'Defesa Estratégica', sub: 'Serviço principal' },
-                  { value: 'essencial+gestao' as Plano, label: 'Defesa Estratégica + Acompanhamento', sub: 'Serviço principal + adicional' },
-                ] as { value: Plano; label: string; sub: string }[]).map((opt) => (
+                  { value: 'essencial'       as Plano, label: 'Defesa Estratégica',                         sub: 'Serviço principal' },
+                  { value: 'essencial+gestao' as Plano, label: 'Defesa Estratégica + Gestão de Notificações', sub: 'Serviço principal + adicional' },
+                ]).map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setPlano(opt.value)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
+                      display: 'flex', alignItems: 'center', gap: '12px',
                       padding: '14px 16px',
                       background: plano === opt.value ? 'rgba(26,86,219,0.1)' : 'rgba(26,86,219,0.03)',
                       border: `1px solid ${plano === opt.value ? 'rgba(26,86,219,0.45)' : 'rgba(26,86,219,0.12)'}`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      width: '100%',
+                      borderRadius: '10px', cursor: 'pointer', textAlign: 'left', width: '100%',
                       transition: 'all 0.2s ease',
                     }}
                   >
@@ -138,24 +154,27 @@ export function SignatureSection({
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 {([
-                  { value: 'pix' as Pgto, label: 'Via PIX', icon: '⚡' },
-                  { value: 'cartao' as Pgto, label: 'Via Cartão', icon: '💳' },
-                ] as { value: Pgto; label: string; icon: string }[]).map((opt) => (
+                  { value: 'pix'    as Pgto, icon: '⚡', label: 'Via PIX',    sub: fmt(pgto === 'pix' ? totalPix : totalPix) },
+                  { value: 'cartao' as Pgto, icon: '💳', label: 'Via Cartão', sub: parcelas > 1 ? `${parcelas}x de ${fmt(totalCartao / parcelas)}` : fmt(totalCartao) },
+                ]).map((opt) => (
                   <button
                     key={opt.value}
                     onClick={() => setPgto(opt.value)}
                     style={{
-                      padding: '12px',
+                      padding: '14px 12px',
                       background: pgto === opt.value ? 'rgba(26,86,219,0.12)' : 'rgba(26,86,219,0.03)',
                       border: `1px solid ${pgto === opt.value ? 'rgba(26,86,219,0.45)' : 'rgba(26,86,219,0.12)'}`,
-                      borderRadius: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'center',
+                      borderRadius: '10px', cursor: 'pointer', textAlign: 'center',
                       transition: 'all 0.2s ease',
                     }}
                   >
                     <div style={{ fontSize: '1.1rem', marginBottom: '4px' }}>{opt.icon}</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: pgto === opt.value ? '#F0F6FF' : '#8BA8CC' }}>{opt.label}</div>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: pgto === opt.value ? '#F0F6FF' : '#8BA8CC' }}>
+                      {opt.label}
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: pgto === opt.value ? '#60A5FA' : '#4D6A8A', marginTop: '2px' }}>
+                      {opt.value === 'pix' ? fmt(totalPix) : (parcelas > 1 ? `${parcelas}x de ${fmt(totalCartao / parcelas)}` : fmt(totalCartao))}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -164,42 +183,33 @@ export function SignatureSection({
             {/* Total */}
             <div
               style={{
-                background: 'rgba(26,86,219,0.06)',
-                border: '1px solid rgba(26,86,219,0.15)',
-                borderRadius: '10px',
-                padding: '16px 20px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                background: 'rgba(26,86,219,0.06)', border: '1px solid rgba(26,86,219,0.15)',
+                borderRadius: '10px', padding: '16px 20px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 marginBottom: '20px',
               }}
             >
               <span style={{ fontSize: '0.82rem', color: '#8BA8CC' }}>
-                Total ({plano === 'essencial' ? 'Defesa Estratégica' : 'Defesa + Acompanhamento'} · {pgto === 'pix' ? 'PIX' : 'Cartão'})
+                {plano === 'essencial' ? 'Defesa Estratégica' : 'Defesa + Gestão de Notificações'} · {pgto === 'pix' ? 'PIX' : 'Cartão'}
               </span>
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F0F6FF' }}>{fmt(total)}</span>
+              <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F0F6FF' }}>
+                {totalLabel()}
+              </span>
             </div>
 
             {/* Terms */}
             <div
               style={{
-                background: 'rgba(26,86,219,0.04)',
-                border: '1px solid rgba(26,86,219,0.1)',
-                borderRadius: '10px',
-                padding: '14px 16px',
-                fontSize: '0.78rem',
-                color: '#8BA8CC',
-                lineHeight: 1.7,
-                marginBottom: '20px',
+                background: 'rgba(26,86,219,0.04)', border: '1px solid rgba(26,86,219,0.1)',
+                borderRadius: '10px', padding: '14px 16px',
+                fontSize: '0.78rem', color: '#8BA8CC', lineHeight: 1.7, marginBottom: '20px',
               }}
             >
               Após a confirmação, nossa equipe enviará o contrato e o link de pagamento. O início da prestação de serviços ocorre após a assinatura do contrato e confirmação do pagamento.
             </div>
 
             {/* Checkbox */}
-            <label
-              style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', marginBottom: '24px' }}
-            >
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer', marginBottom: '24px' }}>
               <div
                 onClick={() => setAgreed(!agreed)}
                 style={{
@@ -218,8 +228,7 @@ export function SignatureSection({
               </div>
               <span style={{ fontSize: '0.84rem', color: '#8BA8CC', lineHeight: 1.6 }}>
                 Li e compreendi os termos desta proposta. Confirmo que sou{' '}
-                <strong style={{ color: '#F0F6FF' }}>{clientName}</strong> e manifesto interesse
-                em contratar a modalidade selecionada.
+                <strong style={{ color: '#F0F6FF' }}>{clientName}</strong> e manifesto interesse em contratar a modalidade selecionada.
               </span>
             </label>
 
@@ -238,14 +247,10 @@ export function SignatureSection({
             </button>
           </div>
         ) : (
-          /* Success */
           <div
             style={{
-              background: 'rgba(16,185,129,0.05)',
-              border: '1px solid rgba(16,185,129,0.25)',
-              borderRadius: '20px',
-              padding: '48px 36px',
-              textAlign: 'center',
+              background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.25)',
+              borderRadius: '20px', padding: '48px 36px', textAlign: 'center',
             }}
           >
             <div

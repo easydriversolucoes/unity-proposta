@@ -7,8 +7,10 @@ export interface Proposal {
   tipo_infracao: string
   valor_essencial_pix: number
   valor_essencial_cartao: number
+  parcelas_essencial: number
   valor_gestao_pix: number
   valor_gestao_cartao: number
+  parcelas_gestao: number
   prazo_validade: string | null
   observacoes: string | null
   status: ProposalStatus
@@ -24,8 +26,10 @@ export interface CreateProposalInput {
   tipo_infracao: string
   valor_essencial_pix: number
   valor_essencial_cartao: number
+  parcelas_essencial: number
   valor_gestao_pix: number
   valor_gestao_cartao: number
+  parcelas_gestao: number
   prazo_validade?: string
   observacoes?: string
 }

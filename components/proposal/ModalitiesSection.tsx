@@ -3,8 +3,10 @@ import { RevealWrapper } from './RevealWrapper'
 interface ModalitiesSectionProps {
   valorEssencialPix: number
   valorEssencialCartao: number
+  parcelasEssencial: number
   valorGestaoPix: number
   valorGestaoCartao: number
+  parcelasGestao: number
 }
 
 const fmt = (v: number) =>
@@ -35,9 +37,20 @@ function CheckIcon({ color = '#60A5FA' }: { color?: string }) {
   )
 }
 
-function PriceBlock({ pix, cartao }: { pix: number; cartao: number }) {
+function PriceBlock({
+  pix,
+  cartao,
+  parcelas,
+}: {
+  pix: number
+  cartao: number
+  parcelas: number
+}) {
+  const valorParcela = cartao / parcelas
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+      {/* PIX */}
       <div
         style={{
           background: 'rgba(16, 185, 129, 0.06)',
@@ -52,6 +65,8 @@ function PriceBlock({ pix, cartao }: { pix: number; cartao: number }) {
         </div>
         <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0F6FF' }}>{fmt(pix)}</div>
       </div>
+
+      {/* Cartão */}
       <div
         style={{
           background: 'rgba(26, 86, 219, 0.06)',
@@ -64,7 +79,18 @@ function PriceBlock({ pix, cartao }: { pix: number; cartao: number }) {
         <div style={{ fontSize: '0.65rem', color: '#60A5FA', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
           Via Cartão
         </div>
-        <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0F6FF' }}>{fmt(cartao)}</div>
+        {parcelas > 1 ? (
+          <>
+            <div style={{ fontSize: '1rem', fontWeight: 800, color: '#F0F6FF' }}>
+              {parcelas}x de {fmt(valorParcela)}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#4D6A8A', marginTop: '2px' }}>
+              Total: {fmt(cartao)}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0F6FF' }}>{fmt(cartao)}</div>
+        )}
       </div>
     </div>
   )
@@ -73,8 +99,10 @@ function PriceBlock({ pix, cartao }: { pix: number; cartao: number }) {
 export function ModalitiesSection({
   valorEssencialPix,
   valorEssencialCartao,
+  parcelasEssencial,
   valorGestaoPix,
   valorGestaoCartao,
+  parcelasGestao,
 }: ModalitiesSectionProps) {
   return (
     <section style={{ padding: '80px 24px', background: '#040C18' }} id="modalidades">
@@ -97,12 +125,12 @@ export function ModalitiesSection({
               O que está incluído na sua proposta
             </h2>
             <p style={{ fontSize: '1rem', color: '#8BA8CC', maxWidth: '480px', margin: '0 auto', lineHeight: 1.65 }}>
-              A atuação principal é a Defesa Estratégica. O Acompanhamento Processual é um serviço adicional para quem prefere praticidade.
+              A atuação principal é a Defesa Estratégica. A Gestão de Notificações é um serviço adicional para quem prefere praticidade.
             </p>
           </div>
         </RevealWrapper>
 
-        {/* ── Card 1: Defesa Estratégica (serviço principal) ── */}
+        {/* ── Card 1: Defesa Estratégica ── */}
         <RevealWrapper>
           <div
             style={{
@@ -114,35 +142,22 @@ export function ModalitiesSection({
               marginBottom: '20px',
             }}
           >
-            {/* Badge */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
               <span
                 style={{
-                  background: 'rgba(26,86,219,0.15)',
-                  border: '1px solid rgba(26,86,219,0.35)',
-                  color: '#60A5FA',
-                  borderRadius: '100px',
-                  padding: '5px 14px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
+                  background: 'rgba(26,86,219,0.15)', border: '1px solid rgba(26,86,219,0.35)',
+                  color: '#60A5FA', borderRadius: '100px', padding: '5px 14px',
+                  fontSize: '0.72rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                 }}
               >
                 Serviço Principal
               </span>
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: 'rgba(16,185,129,0.08)',
-                  border: '1px solid rgba(16,185,129,0.2)',
-                  borderRadius: '100px',
-                  padding: '4px 12px',
-                  fontSize: '0.72rem',
-                  color: '#6EE7B7',
-                  fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)',
+                  borderRadius: '100px', padding: '4px 12px',
+                  fontSize: '0.72rem', color: '#6EE7B7', fontWeight: 600,
                 }}
               >
                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
@@ -173,12 +188,11 @@ export function ModalitiesSection({
               O acompanhamento do andamento processual após a elaboração da defesa permanece sob responsabilidade do cliente através do portal do órgão.
             </p>
 
-            {/* Prices */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ fontSize: '0.72rem', color: '#4D6A8A', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>
                 Investimento
               </div>
-              <PriceBlock pix={valorEssencialPix} cartao={valorEssencialCartao} />
+              <PriceBlock pix={valorEssencialPix} cartao={valorEssencialCartao} parcelas={parcelasEssencial} />
             </div>
 
             <a
@@ -194,17 +208,9 @@ export function ModalitiesSection({
           </div>
         </RevealWrapper>
 
-        {/* ── Separator ── */}
+        {/* ── Separador ── */}
         <RevealWrapper delay={100}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '16px',
-              margin: '8px 0',
-              padding: '0 8px',
-            }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '8px 0', padding: '0 8px' }}>
             <div style={{ flex: 1, height: '1px', background: 'rgba(26,86,219,0.12)' }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#4D6A8A', whiteSpace: 'nowrap' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -216,7 +222,7 @@ export function ModalitiesSection({
           </div>
         </RevealWrapper>
 
-        {/* ── Card 2: Gestão Completa (add-on) ── */}
+        {/* ── Card 2: Gestão de Notificações ── */}
         <RevealWrapper delay={150}>
           <div
             style={{
@@ -230,15 +236,9 @@ export function ModalitiesSection({
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
               <span
                 style={{
-                  background: 'rgba(196,146,42,0.1)',
-                  border: '1px solid rgba(196,146,42,0.25)',
-                  color: '#E8B84B',
-                  borderRadius: '100px',
-                  padding: '4px 12px',
-                  fontSize: '0.68rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
+                  background: 'rgba(196,146,42,0.1)', border: '1px solid rgba(196,146,42,0.25)',
+                  color: '#E8B84B', borderRadius: '100px', padding: '4px 12px',
+                  fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
                 }}
               >
                 Adicional Opcional
@@ -246,7 +246,7 @@ export function ModalitiesSection({
             </div>
 
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#D0E4FF', marginBottom: '6px' }}>
-              + Acompanhamento Processual Completo
+              + Gestão de Notificações
             </h3>
             <p style={{ fontSize: '0.86rem', color: '#8BA8CC', lineHeight: 1.6, marginBottom: '24px' }}>
               Para quem prefere não acessar portais ou acompanhar movimentações. Nossa equipe cuida de tudo.
@@ -261,12 +261,11 @@ export function ModalitiesSection({
               ))}
             </ul>
 
-            {/* Prices */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ fontSize: '0.72rem', color: '#4D6A8A', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px', fontWeight: 600 }}>
                 Investimento adicional
               </div>
-              <PriceBlock pix={valorGestaoPix} cartao={valorGestaoCartao} />
+              <PriceBlock pix={valorGestaoPix} cartao={valorGestaoCartao} parcelas={parcelasGestao} />
             </div>
 
             <a
@@ -274,7 +273,7 @@ export function ModalitiesSection({
               className="btn-ghost"
               style={{ width: '100%', justifyContent: 'center', textDecoration: 'none' }}
             >
-              Contratar com Acompanhamento
+              Contratar com Gestão de Notificações
             </a>
           </div>
         </RevealWrapper>

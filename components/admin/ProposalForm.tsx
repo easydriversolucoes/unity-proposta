@@ -76,6 +76,7 @@ const BLUR = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLS
 export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
   const [proposals, setProposals] = useState<Proposal[]>(initialProposals)
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [form, setForm] = useState({
@@ -84,8 +85,10 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
     tipo_infracao: INFRACTION_TYPES[0],
     valor_essencial_pix: '',
     valor_essencial_cartao: '',
+    parcelas_essencial: '1',
     valor_gestao_pix: '',
     valor_gestao_cartao: '',
+    parcelas_gestao: '1',
     prazo_validade: '',
     observacoes: '',
   })
@@ -100,6 +103,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setSubmitError(null)
     startTransition(async () => {
       const result = await createProposalAction({
         nome_cliente: form.nome_cliente.trim(),
@@ -107,8 +111,10 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         tipo_infracao: form.tipo_infracao,
         valor_essencial_pix:    num(form.valor_essencial_pix),
         valor_essencial_cartao: num(form.valor_essencial_cartao),
+        parcelas_essencial:     parseInt(form.parcelas_essencial) || 1,
         valor_gestao_pix:       num(form.valor_gestao_pix),
         valor_gestao_cartao:    num(form.valor_gestao_cartao),
+        parcelas_gestao:        parseInt(form.parcelas_gestao) || 1,
         prazo_validade: form.prazo_validade || undefined,
         observacoes:   form.observacoes   || undefined,
       })
@@ -118,10 +124,12 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         setProposals(updated)
         setForm({
           nome_cliente: '', ait: '', tipo_infracao: INFRACTION_TYPES[0],
-          valor_essencial_pix: '', valor_essencial_cartao: '',
-          valor_gestao_pix: '', valor_gestao_cartao: '',
+          valor_essencial_pix: '', valor_essencial_cartao: '', parcelas_essencial: '1',
+          valor_gestao_pix: '', valor_gestao_cartao: '', parcelas_gestao: '1',
           prazo_validade: '', observacoes: '',
         })
+      } else {
+        setSubmitError(result.error ?? 'Erro ao criar proposta. Verifique as variáveis de ambiente e o schema do Supabase.')
       }
     })
   }
@@ -233,7 +241,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                 {/* Defesa Estratégica */}
                 <div>
                   <div style={sectionTitle}>Defesa Estratégica — Valores</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <label>
                       <span style={labelStyle}>Valor PIX *</span>
                       <input style={fieldStyle} type="number" required placeholder="Ex: 800" min="0" step="0.01"
@@ -244,13 +252,22 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                       <input style={fieldStyle} type="number" required placeholder="Ex: 900" min="0" step="0.01"
                         value={form.valor_essencial_cartao} onChange={(e) => f('valor_essencial_cartao', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
+                    <label>
+                      <span style={labelStyle}>Parcelas cartão</span>
+                      <select style={{ ...fieldStyle, cursor: 'pointer' }}
+                        value={form.parcelas_essencial} onChange={(e) => f('parcelas_essencial', e.target.value)} onFocus={FOCUS} onBlur={BLUR}>
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => (
+                          <option key={n} value={n} style={{ background: '#040C18' }}>{n === 1 ? '1x (à vista)' : `${n}x`}</option>
+                        ))}
+                      </select>
+                    </label>
                   </div>
                 </div>
 
-                {/* Gestão Completa */}
+                {/* Gestão de Notificações */}
                 <div>
-                  <div style={sectionTitle}>Acompanhamento Processual — Valores (adicional)</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  <div style={sectionTitle}>Gestão de Notificações — Valores (adicional)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <label>
                       <span style={labelStyle}>Valor PIX *</span>
                       <input style={fieldStyle} type="number" required placeholder="Ex: 300" min="0" step="0.01"
@@ -260,6 +277,15 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                       <span style={labelStyle}>Valor Cartão *</span>
                       <input style={fieldStyle} type="number" required placeholder="Ex: 350" min="0" step="0.01"
                         value={form.valor_gestao_cartao} onChange={(e) => f('valor_gestao_cartao', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
+                    </label>
+                    <label>
+                      <span style={labelStyle}>Parcelas cartão</span>
+                      <select style={{ ...fieldStyle, cursor: 'pointer' }}
+                        value={form.parcelas_gestao} onChange={(e) => f('parcelas_gestao', e.target.value)} onFocus={FOCUS} onBlur={BLUR}>
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => (
+                          <option key={n} value={n} style={{ background: '#040C18' }}>{n === 1 ? '1x (à vista)' : `${n}x`}</option>
+                        ))}
+                      </select>
                     </label>
                   </div>
                 </div>
@@ -271,6 +297,22 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                     placeholder="Notas para uso interno..."
                     value={form.observacoes} onChange={(e) => f('observacoes', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                 </label>
+
+                {submitError && (
+                  <div
+                    style={{
+                      background: 'rgba(239,68,68,0.08)',
+                      border: '1px solid rgba(239,68,68,0.25)',
+                      borderRadius: '10px',
+                      padding: '14px 16px',
+                      fontSize: '0.82rem',
+                      color: '#FCA5A5',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    <strong>Erro:</strong> {submitError}
+                  </div>
+                )}
 
                 <button
                   type="submit"
