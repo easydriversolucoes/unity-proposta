@@ -1,7 +1,12 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // Server-side env vars (never exposed to the browser)
+  serverExternalPackages: [],
+  // Image domains if you add Lidiane's photo via external URL
+  images: {
+    remotePatterns: [],
+  },
+}
 
-export default nextConfig;
+export default nextConfig
