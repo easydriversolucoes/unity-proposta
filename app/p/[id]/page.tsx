@@ -8,21 +8,31 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params
-  const proposal = await getProposal(id)
-  if (!proposal) return { title: 'Proposta não encontrada' }
-  return {
-    title: `Análise Estratégica — ${proposal.nome_cliente} | Unity Multas`,
-    robots: 'noindex, nofollow',
+  try {
+    const { id } = await params
+    const proposal = await getProposal(id)
+    if (!proposal) return { title: 'Proposta não encontrada' }
+    return {
+      title: `Análise Estratégica — ${proposal.nome_cliente} | Unity Multas`,
+      robots: 'noindex, nofollow',
+    }
+  } catch {
+    return { title: 'Unity Multas' }
   }
 }
 
 export default async function ProposalRoute({ params }: PageProps) {
   const { id } = await params
-  const proposal = await getProposal(id)
+
+  let proposal = null
+  try {
+    proposal = await getProposal(id)
+  } catch {
+    notFound()
+  }
+
   if (!proposal) notFound()
 
-  // Await so Vercel serverless doesn't terminate before the update completes
   await markAsViewed(id).catch(() => {})
 
   return <ProposalPage proposal={proposal} />

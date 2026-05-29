@@ -1,17 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Proposal, CreateProposalInput } from '@/types/proposal'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-// Server-side client (uses service key, never exposed to browser)
-export const supabaseAdmin = () =>
-  createClient(supabaseUrl, supabaseServiceKey)
-
-// Browser-safe client
-export const supabaseBrowser = () =>
-  createClient(supabaseUrl, supabaseAnonKey)
+function supabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_KEY
+  if (!url || !key) {
+    throw new Error(
+      'Supabase não configurado. Defina NEXT_PUBLIC_SUPABASE_URL e SUPABASE_SERVICE_KEY nas variáveis de ambiente.'
+    )
+  }
+  return createClient(url, key)
+}
 
 function generateId(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -26,7 +25,6 @@ export async function createProposal(data: CreateProposalInput): Promise<Proposa
   const client = supabaseAdmin()
   let id = generateId()
 
-  // Ensure unique ID
   let attempt = 0
   while (attempt < 5) {
     const { data: existing } = await client.from('propostas').select('id').eq('id', id).single()
