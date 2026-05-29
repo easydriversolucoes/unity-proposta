@@ -12,6 +12,7 @@ interface SignatureSectionProps {
   valorGestaoPix: number
   valorGestaoCartao: number
   parcelasGestao: number
+  mostrarGestao: boolean
 }
 
 const fmt = (v: number) =>
@@ -32,6 +33,7 @@ export function SignatureSection({
   valorGestaoPix,
   valorGestaoCartao,
   parcelasGestao,
+  mostrarGestao,
 }: SignatureSectionProps) {
   const [plano, setPlano]   = useState<Plano>('essencial')
   const [pgto, setPgto]     = useState<Pgto>('pix')
@@ -112,8 +114,8 @@ export function SignatureSection({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {([
-                  { value: 'essencial'       as Plano, label: 'Defesa Estratégica',                         sub: 'Serviço principal' },
-                  { value: 'essencial+gestao' as Plano, label: 'Defesa Estratégica + Gestão de Notificações', sub: 'Serviço principal + adicional' },
+                  { value: 'essencial' as Plano, label: 'Defesa Estratégica', sub: 'Serviço principal' },
+                  ...(mostrarGestao ? [{ value: 'essencial+gestao' as Plano, label: 'Defesa Estratégica + Gestão de Notificações', sub: 'Serviço principal + adicional' }] : []),
                 ]).map((opt) => (
                   <button
                     key={opt.value}

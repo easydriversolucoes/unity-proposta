@@ -5,10 +5,7 @@ import type { Proposal } from '@/types/proposal'
 
 const INFRACTION_TYPES = [
   'Lei Seca — Recusa ao Teste',
-  'Lei Seca — Exame Clínico',
   'Lei Seca — Etilômetro',
-  'Excesso de Velocidade',
-  'Avanço de Sinal',
   'Outro',
 ]
 
@@ -96,6 +93,10 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
 
   function f(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function titleCase(str: string) {
+    return str.replace(/(^|\s)\S/g, c => c.toUpperCase())
   }
 
   function toggleGestao() {
@@ -216,7 +217,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                     <label>
                       <span style={labelStyle}>Nome completo *</span>
                       <input style={fieldStyle} type="text" required placeholder="Ex: Carlos Henrique Silva"
-                        value={form.nome_cliente} onChange={(e) => f('nome_cliente', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
+                        value={form.nome_cliente} onChange={(e) => f('nome_cliente', titleCase(e.target.value))} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                     <label>
                       <span style={labelStyle}>Número do AIT *</span>
