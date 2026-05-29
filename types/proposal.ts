@@ -11,6 +11,7 @@ export interface Proposal {
   valor_gestao_pix: number
   valor_gestao_cartao: number
   parcelas_gestao: number
+  mostrar_gestao: boolean
   prazo_validade: string | null
   observacoes: string | null
   status: ProposalStatus
@@ -30,6 +31,7 @@ export interface CreateProposalInput {
   valor_gestao_pix: number
   valor_gestao_cartao: number
   parcelas_gestao: number
+  mostrar_gestao: boolean
   prazo_validade?: string
   observacoes?: string
 }

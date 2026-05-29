@@ -83,18 +83,23 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
     nome_cliente: '',
     ait: '',
     tipo_infracao: INFRACTION_TYPES[0],
-    valor_essencial_pix: '',
-    valor_essencial_cartao: '',
+    valor_essencial_pix: '1100',
+    valor_essencial_cartao: '1500',
     parcelas_essencial: '1',
     valor_gestao_pix: '',
     valor_gestao_cartao: '',
     parcelas_gestao: '1',
+    mostrar_gestao: false,
     prazo_validade: '',
     observacoes: '',
   })
 
   function f(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function toggleGestao() {
+    setForm((prev) => ({ ...prev, mostrar_gestao: !prev.mostrar_gestao }))
   }
 
   function num(v: string) {
@@ -115,6 +120,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         valor_gestao_pix:       num(form.valor_gestao_pix),
         valor_gestao_cartao:    num(form.valor_gestao_cartao),
         parcelas_gestao:        parseInt(form.parcelas_gestao) || 1,
+        mostrar_gestao:         form.mostrar_gestao,
         prazo_validade: form.prazo_validade || undefined,
         observacoes:   form.observacoes   || undefined,
       })
@@ -124,8 +130,9 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         setProposals(updated)
         setForm({
           nome_cliente: '', ait: '', tipo_infracao: INFRACTION_TYPES[0],
-          valor_essencial_pix: '', valor_essencial_cartao: '', parcelas_essencial: '1',
+          valor_essencial_pix: '1100', valor_essencial_cartao: '1500', parcelas_essencial: '1',
           valor_gestao_pix: '', valor_gestao_cartao: '', parcelas_gestao: '1',
+          mostrar_gestao: false,
           prazo_validade: '', observacoes: '',
         })
       } else {
@@ -288,6 +295,46 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                       </select>
                     </label>
                   </div>
+                </div>
+
+                {/* Toggle upsell */}
+                <div>
+                  <div style={sectionTitle}>Upsell</div>
+                  <button
+                    type="button"
+                    onClick={toggleGestao}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '14px',
+                      background: form.mostrar_gestao ? 'rgba(196,146,42,0.08)' : 'rgba(26,86,219,0.04)',
+                      border: `1px solid ${form.mostrar_gestao ? 'rgba(196,146,42,0.35)' : 'rgba(26,86,219,0.15)'}`,
+                      borderRadius: '10px', padding: '14px 16px', cursor: 'pointer',
+                      width: '100%', textAlign: 'left', transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {/* Toggle pill */}
+                    <div style={{
+                      width: '40px', height: '22px', borderRadius: '100px', flexShrink: 0,
+                      background: form.mostrar_gestao ? '#C4922A' : 'rgba(26,86,219,0.2)',
+                      position: 'relative', transition: 'background 0.2s ease',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: '3px',
+                        left: form.mostrar_gestao ? '20px' : '3px',
+                        width: '16px', height: '16px', borderRadius: '50%',
+                        background: 'white', transition: 'left 0.2s ease',
+                      }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.88rem', fontWeight: 700, color: form.mostrar_gestao ? '#E8B84B' : '#8BA8CC' }}>
+                        Mostrar Gestão de Notificações
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#4D6A8A', marginTop: '2px' }}>
+                        {form.mostrar_gestao
+                          ? 'O cliente verá a opção de contratar o upsell'
+                          : 'O upsell ficará oculto nesta proposta'}
+                      </div>
+                    </div>
+                  </button>
                 </div>
 
                 {/* Observações */}

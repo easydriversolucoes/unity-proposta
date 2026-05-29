@@ -9,6 +9,7 @@ interface ModalitiesSectionProps {
   valorGestaoPix: number
   valorGestaoCartao: number
   parcelasGestao: number
+  mostrarGestao: boolean
 }
 
 const fmt = (v: number) =>
@@ -42,7 +43,7 @@ function CheckIcon({ color = '#60A5FA' }: { color?: string }) {
 function PriceBlock({ pix, cartao, parcelas }: { pix: number; cartao: number; parcelas: number }) {
   const valorParcela = cartao / parcelas
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+    <div className="price-grid">
       <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
         <div style={{ fontSize: '0.65rem', color: '#6EE7B7', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>Via PIX</div>
         <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#F0F6FF' }}>{fmt(pix)}</div>
@@ -69,6 +70,7 @@ export function ModalitiesSection({
   valorGestaoPix,
   valorGestaoCartao,
   parcelasGestao,
+  mostrarGestao,
 }: ModalitiesSectionProps) {
   const [gestaoVisible, setGestaoVisible] = useState(false)
 
@@ -141,8 +143,8 @@ export function ModalitiesSection({
           </div>
         </RevealWrapper>
 
-        {/* ── Trigger do upsell ── */}
-        <RevealWrapper delay={100}>
+        {/* ── Trigger do upsell — só aparece se admin habilitou ── */}
+        {mostrarGestao && <RevealWrapper delay={100}>
           <div style={{ marginTop: '28px' }}>
             {!gestaoVisible ? (
               <button
@@ -290,7 +292,7 @@ export function ModalitiesSection({
               </div>
             )}
           </div>
-        </RevealWrapper>
+        </RevealWrapper>}
 
       </div>
     </section>

@@ -42,6 +42,10 @@ create index if not exists propostas_status_idx     on public.propostas (status)
 -- MIGRAÇÃO — rode apenas se já tinha a tabela na versão anterior
 -- ================================================================
 
+-- Adicionar coluna mostrar_gestao (toggle do upsell no admin)
+-- alter table public.propostas
+--   add column if not exists mostrar_gestao boolean not null default false;
+
 -- alter table public.propostas
 --   add column if not exists valor_essencial_pix    numeric(10,2) not null default 0,
 --   add column if not exists valor_essencial_cartao numeric(10,2) not null default 0,

@@ -204,6 +204,16 @@ body {
   background-size: 60px 60px;
 }
 
+/* Responsive price grid — stacks on mobile */
+.price-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .price-grid { grid-template-columns: 1fr; }
+}
+
 /* Risk cards — hover via CSS so the component stays a Server Component */
 .risk-card {
   background: rgba(9, 24, 48, 0.7);
