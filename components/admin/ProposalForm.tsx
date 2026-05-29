@@ -55,6 +55,24 @@ const labelStyle: React.CSSProperties = {
   fontWeight: 600,
 }
 
+const sectionTitle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: '#1A56DB',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  fontWeight: 700,
+  marginBottom: '16px',
+  paddingBottom: '8px',
+  borderBottom: '1px solid rgba(26,86,219,0.15)',
+}
+
+const FOCUS = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.borderColor = 'rgba(26,86,219,0.5)'
+}
+const BLUR = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  e.target.style.borderColor = 'rgba(26,86,219,0.18)'
+}
+
 export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
   const [proposals, setProposals] = useState<Proposal[]>(initialProposals)
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
@@ -64,16 +82,20 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
     nome_cliente: '',
     ait: '',
     tipo_infracao: INFRACTION_TYPES[0],
-    valor_essencial: '',
-    valor_gestao: '',
-    link_pagamento_essencial: '',
-    link_pagamento_gestao: '',
+    valor_essencial_pix: '',
+    valor_essencial_cartao: '',
+    valor_gestao_pix: '',
+    valor_gestao_cartao: '',
     prazo_validade: '',
     observacoes: '',
   })
 
-  function handleChange(field: string, value: string) {
+  function f(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function num(v: string) {
+    return parseFloat(v.replace(',', '.')) || 0
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -83,41 +105,32 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         nome_cliente: form.nome_cliente.trim(),
         ait: form.ait.trim().toUpperCase(),
         tipo_infracao: form.tipo_infracao,
-        valor_essencial: parseFloat(form.valor_essencial.replace(',', '.')),
-        valor_gestao: parseFloat(form.valor_gestao.replace(',', '.')),
-        link_pagamento_essencial: form.link_pagamento_essencial || undefined,
-        link_pagamento_gestao: form.link_pagamento_gestao || undefined,
+        valor_essencial_pix:    num(form.valor_essencial_pix),
+        valor_essencial_cartao: num(form.valor_essencial_cartao),
+        valor_gestao_pix:       num(form.valor_gestao_pix),
+        valor_gestao_cartao:    num(form.valor_gestao_cartao),
         prazo_validade: form.prazo_validade || undefined,
-        observacoes: form.observacoes || undefined,
+        observacoes:   form.observacoes   || undefined,
       })
       if (result.ok && result.id) {
-        const link = `${baseUrl}/p/${result.id}`
-        setGeneratedLink(link)
-        // Refresh proposal list
+        setGeneratedLink(`${baseUrl}/p/${result.id}`)
         const updated = await getProposalsAction()
         setProposals(updated)
-        // Reset form
         setForm({
-          nome_cliente: '',
-          ait: '',
-          tipo_infracao: INFRACTION_TYPES[0],
-          valor_essencial: '',
-          valor_gestao: '',
-          link_pagamento_essencial: '',
-          link_pagamento_gestao: '',
-          prazo_validade: '',
-          observacoes: '',
+          nome_cliente: '', ait: '', tipo_infracao: INFRACTION_TYPES[0],
+          valor_essencial_pix: '', valor_essencial_cartao: '',
+          valor_gestao_pix: '', valor_gestao_cartao: '',
+          prazo_validade: '', observacoes: '',
         })
       }
     })
   }
 
   function copyLink() {
-    if (generatedLink) {
-      navigator.clipboard.writeText(generatedLink)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
+    if (!generatedLink) return
+    navigator.clipboard.writeText(generatedLink)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   function handleLogout() {
@@ -128,40 +141,24 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#040C18',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        color: '#F0F6FF',
-      }}
-    >
+    <div style={{ minHeight: '100vh', background: '#040C18', fontFamily: 'Inter, system-ui, sans-serif', color: '#F0F6FF' }}>
       {/* Header */}
       <header
         style={{
           background: 'rgba(4, 12, 24, 0.95)',
-          borderBottom: '1px solid rgba(26, 86, 219, 0.15)',
+          borderBottom: '1px solid rgba(26,86,219,0.15)',
           backdropFilter: 'blur(16px)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50,
-          padding: '0 32px',
-          height: '68px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          position: 'sticky', top: 0, zIndex: 50,
+          padding: '0 32px', height: '68px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '32px',
-              height: '32px',
+              width: '32px', height: '32px',
               background: 'linear-gradient(135deg, #1A56DB 0%, #1E40AF 100%)',
-              borderRadius: '7px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -172,32 +169,13 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
           <span style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
             Unity Multas
           </span>
-          <span
-            style={{
-              background: 'rgba(26,86,219,0.12)',
-              border: '1px solid rgba(26,86,219,0.25)',
-              color: '#60A5FA',
-              borderRadius: '100px',
-              padding: '2px 10px',
-              fontSize: '0.68rem',
-              fontWeight: 600,
-              letterSpacing: '0.06em',
-            }}
-          >
+          <span style={{ background: 'rgba(26,86,219,0.12)', border: '1px solid rgba(26,86,219,0.25)', color: '#60A5FA', borderRadius: '100px', padding: '2px 10px', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.06em' }}>
             Painel Interno
           </span>
         </div>
         <button
           onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(26,86,219,0.2)',
-            color: '#8BA8CC',
-            borderRadius: '8px',
-            padding: '8px 16px',
-            fontSize: '0.8rem',
-            cursor: 'pointer',
-          }}
+          style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#8BA8CC', borderRadius: '8px', padding: '8px 16px', fontSize: '0.8rem', cursor: 'pointer' }}
         >
           Sair
         </button>
@@ -209,234 +187,103 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
           {/* Left — Form */}
           <div>
             <div style={{ marginBottom: '28px' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '6px' }}>
-                Nova Proposta
-              </h1>
-              <p style={{ fontSize: '0.84rem', color: '#8BA8CC' }}>
-                Preencha os dados para gerar o link da proposta.
-              </p>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '6px' }}>Nova Proposta</h1>
+              <p style={{ fontSize: '0.84rem', color: '#8BA8CC' }}>Preencha os dados para gerar o link da proposta.</p>
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div
-                style={{
-                  background: 'rgba(9, 24, 48, 0.85)',
-                  border: '1px solid rgba(26, 86, 219, 0.2)',
-                  borderRadius: '16px',
-                  padding: '32px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '20px',
-                }}
-              >
-                {/* Section: Client */}
-                <div>
-                  <div
-                    style={{
-                      fontSize: '0.7rem',
-                      color: '#1A56DB',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      marginBottom: '16px',
-                      paddingBottom: '8px',
-                      borderBottom: '1px solid rgba(26,86,219,0.15)',
-                    }}
-                  >
-                    Dados do Cliente
-                  </div>
+              <div style={{ background: 'rgba(9,24,48,0.85)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: '16px', padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
+                {/* Cliente */}
+                <div>
+                  <div style={sectionTitle}>Dados do Cliente</div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <label>
                       <span style={labelStyle}>Nome completo *</span>
-                      <input
-                        style={fieldStyle}
-                        type="text"
-                        required
-                        placeholder="Ex: Carlos Henrique Silva"
-                        value={form.nome_cliente}
-                        onChange={(e) => handleChange('nome_cliente', e.target.value)}
-                        onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                        onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                      />
+                      <input style={fieldStyle} type="text" required placeholder="Ex: Carlos Henrique Silva"
+                        value={form.nome_cliente} onChange={(e) => f('nome_cliente', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                     <label>
                       <span style={labelStyle}>Número do AIT *</span>
-                      <input
-                        style={fieldStyle}
-                        type="text"
-                        required
-                        placeholder="Ex: 4F8K29XX"
-                        value={form.ait}
-                        onChange={(e) => handleChange('ait', e.target.value)}
-                        onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                        onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                      />
+                      <input style={fieldStyle} type="text" required placeholder="Ex: 4F8K29XX"
+                        value={form.ait} onChange={(e) => f('ait', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                   </div>
                 </div>
 
-                {/* Section: Process */}
+                {/* Processo */}
                 <div>
-                  <div
-                    style={{
-                      fontSize: '0.7rem',
-                      color: '#1A56DB',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      marginBottom: '16px',
-                      paddingBottom: '8px',
-                      borderBottom: '1px solid rgba(26,86,219,0.15)',
-                    }}
-                  >
-                    Processo
+                  <div style={sectionTitle}>Processo</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <label>
+                      <span style={labelStyle}>Tipo de infração *</span>
+                      <select style={{ ...fieldStyle, cursor: 'pointer' }}
+                        value={form.tipo_infracao} onChange={(e) => f('tipo_infracao', e.target.value)} onFocus={FOCUS} onBlur={BLUR}>
+                        {INFRACTION_TYPES.map((t) => <option key={t} value={t} style={{ background: '#040C18' }}>{t}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span style={labelStyle}>Validade da proposta</span>
+                      <input style={fieldStyle} type="date"
+                        value={form.prazo_validade} onChange={(e) => f('prazo_validade', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
+                    </label>
                   </div>
-
-                  <label style={{ display: 'block', marginBottom: '14px' }}>
-                    <span style={labelStyle}>Tipo de infração *</span>
-                    <select
-                      style={{ ...fieldStyle, cursor: 'pointer' }}
-                      value={form.tipo_infracao}
-                      onChange={(e) => handleChange('tipo_infracao', e.target.value)}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                    >
-                      {INFRACTION_TYPES.map((t) => (
-                        <option key={t} value={t} style={{ background: '#040C18' }}>
-                          {t}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    <span style={labelStyle}>Validade da proposta</span>
-                    <input
-                      style={fieldStyle}
-                      type="date"
-                      value={form.prazo_validade}
-                      onChange={(e) => handleChange('prazo_validade', e.target.value)}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                    />
-                  </label>
                 </div>
 
-                {/* Section: Commercial */}
+                {/* Defesa Estratégica */}
                 <div>
-                  <div
-                    style={{
-                      fontSize: '0.7rem',
-                      color: '#1A56DB',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      fontWeight: 700,
-                      marginBottom: '16px',
-                      paddingBottom: '8px',
-                      borderBottom: '1px solid rgba(26,86,219,0.15)',
-                    }}
-                  >
-                    Valores e Pagamento
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                  <div style={sectionTitle}>Defesa Estratégica — Valores</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                     <label>
-                      <span style={labelStyle}>Valor — Defesa Estratégica *</span>
-                      <input
-                        style={fieldStyle}
-                        type="number"
-                        required
-                        placeholder="Ex: 897"
-                        min="0"
-                        step="0.01"
-                        value={form.valor_essencial}
-                        onChange={(e) => handleChange('valor_essencial', e.target.value)}
-                        onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                        onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                      />
+                      <span style={labelStyle}>Valor PIX *</span>
+                      <input style={fieldStyle} type="number" required placeholder="Ex: 800" min="0" step="0.01"
+                        value={form.valor_essencial_pix} onChange={(e) => f('valor_essencial_pix', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                     <label>
-                      <span style={labelStyle}>Valor — Gestão Completa *</span>
-                      <input
-                        style={fieldStyle}
-                        type="number"
-                        required
-                        placeholder="Ex: 1497"
-                        min="0"
-                        step="0.01"
-                        value={form.valor_gestao}
-                        onChange={(e) => handleChange('valor_gestao', e.target.value)}
-                        onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                        onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                      />
+                      <span style={labelStyle}>Valor Cartão *</span>
+                      <input style={fieldStyle} type="number" required placeholder="Ex: 900" min="0" step="0.01"
+                        value={form.valor_essencial_cartao} onChange={(e) => f('valor_essencial_cartao', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                   </div>
+                </div>
 
-                  <label style={{ display: 'block', marginBottom: '14px' }}>
-                    <span style={labelStyle}>Link de pagamento — Defesa Estratégica</span>
-                    <input
-                      style={fieldStyle}
-                      type="url"
-                      placeholder="https://..."
-                      value={form.link_pagamento_essencial}
-                      onChange={(e) => handleChange('link_pagamento_essencial', e.target.value)}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                    />
-                  </label>
-                  <label>
-                    <span style={labelStyle}>Link de pagamento — Gestão Completa</span>
-                    <input
-                      style={fieldStyle}
-                      type="url"
-                      placeholder="https://..."
-                      value={form.link_pagamento_gestao}
-                      onChange={(e) => handleChange('link_pagamento_gestao', e.target.value)}
-                      onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                      onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                    />
-                  </label>
+                {/* Gestão Completa */}
+                <div>
+                  <div style={sectionTitle}>Acompanhamento Processual — Valores (adicional)</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <label>
+                      <span style={labelStyle}>Valor PIX *</span>
+                      <input style={fieldStyle} type="number" required placeholder="Ex: 300" min="0" step="0.01"
+                        value={form.valor_gestao_pix} onChange={(e) => f('valor_gestao_pix', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
+                    </label>
+                    <label>
+                      <span style={labelStyle}>Valor Cartão *</span>
+                      <input style={fieldStyle} type="number" required placeholder="Ex: 350" min="0" step="0.01"
+                        value={form.valor_gestao_cartao} onChange={(e) => f('valor_gestao_cartao', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
+                    </label>
+                  </div>
                 </div>
 
                 {/* Observações */}
                 <label>
                   <span style={labelStyle}>Observações internas</span>
-                  <textarea
-                    style={{ ...fieldStyle, minHeight: '80px', resize: 'vertical' }}
+                  <textarea style={{ ...fieldStyle, minHeight: '72px', resize: 'vertical' }}
                     placeholder="Notas para uso interno..."
-                    value={form.observacoes}
-                    onChange={(e) => handleChange('observacoes', e.target.value)}
-                    onFocus={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.5)' }}
-                    onBlur={(e) => { e.target.style.borderColor = 'rgba(26,86,219,0.18)' }}
-                  />
+                    value={form.observacoes} onChange={(e) => f('observacoes', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                 </label>
 
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={isPending}
                   style={{
-                    padding: '14px',
-                    background: 'linear-gradient(135deg, #1A56DB 0%, #1E40AF 100%)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '0.92rem',
-                    fontWeight: 700,
-                    cursor: isPending ? 'wait' : 'pointer',
-                    opacity: isPending ? 0.7 : 1,
-                    boxShadow: '0 4px 20px rgba(26,86,219,0.4)',
-                    transition: 'all 0.25s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
+                    padding: '14px', background: 'linear-gradient(135deg, #1A56DB 0%, #1E40AF 100%)',
+                    color: 'white', border: 'none', borderRadius: '10px', fontSize: '0.92rem', fontWeight: 700,
+                    cursor: isPending ? 'wait' : 'pointer', opacity: isPending ? 0.7 : 1,
+                    boxShadow: '0 4px 20px rgba(26,86,219,0.4)', transition: 'all 0.25s ease',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   }}
                 >
-                  {isPending ? (
-                    'Gerando proposta...'
-                  ) : (
+                  {isPending ? 'Gerando...' : (
                     <>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
@@ -448,65 +295,18 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
               </div>
             </form>
 
-            {/* Generated link */}
             {generatedLink && (
-              <div
-                style={{
-                  marginTop: '20px',
-                  background: 'rgba(16, 185, 129, 0.06)',
-                  border: '1px solid rgba(16, 185, 129, 0.25)',
-                  borderRadius: '12px',
-                  padding: '20px 24px',
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: '0.72rem',
-                    color: '#6EE7B7',
-                    letterSpacing: '0.08em',
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                    marginBottom: '10px',
-                  }}
-                >
+              <div style={{ marginTop: '20px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '12px', padding: '20px 24px' }}>
+                <div style={{ fontSize: '0.72rem', color: '#6EE7B7', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '10px' }}>
                   ✓ Proposta gerada com sucesso
                 </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '10px',
-                    alignItems: 'center',
-                  }}
-                >
-                  <code
-                    style={{
-                      flex: 1,
-                      background: 'rgba(9, 24, 48, 0.8)',
-                      border: '1px solid rgba(26, 86, 219, 0.2)',
-                      borderRadius: '8px',
-                      padding: '10px 14px',
-                      fontSize: '0.82rem',
-                      color: '#60A5FA',
-                      wordBreak: 'break-all',
-                      display: 'block',
-                    }}
-                  >
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <code style={{ flex: 1, background: 'rgba(9,24,48,0.8)', border: '1px solid rgba(26,86,219,0.2)', borderRadius: '8px', padding: '10px 14px', fontSize: '0.82rem', color: '#60A5FA', wordBreak: 'break-all', display: 'block' }}>
                     {generatedLink}
                   </code>
                   <button
                     onClick={copyLink}
-                    style={{
-                      flexShrink: 0,
-                      padding: '10px 16px',
-                      background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(26,86,219,0.1)',
-                      border: `1px solid ${copied ? 'rgba(16,185,129,0.3)' : 'rgba(26,86,219,0.3)'}`,
-                      borderRadius: '8px',
-                      color: copied ? '#6EE7B7' : '#60A5FA',
-                      fontSize: '0.78rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                    }}
+                    style={{ flexShrink: 0, padding: '10px 16px', background: copied ? 'rgba(16,185,129,0.15)' : 'rgba(26,86,219,0.1)', border: `1px solid ${copied ? 'rgba(16,185,129,0.3)' : 'rgba(26,86,219,0.3)'}`, borderRadius: '8px', color: copied ? '#6EE7B7' : '#60A5FA', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
                   >
                     {copied ? '✓ Copiado' : 'Copiar'}
                   </button>
@@ -527,106 +327,36 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
               </p>
             </div>
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                maxHeight: 'calc(100vh - 220px)',
-                overflowY: 'auto',
-                paddingRight: '4px',
-              }}
-            >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: 'calc(100vh - 220px)', overflowY: 'auto', paddingRight: '4px' }}>
               {proposals.length === 0 && (
-                <div
-                  style={{
-                    background: 'rgba(9, 24, 48, 0.6)',
-                    border: '1px solid rgba(26, 86, 219, 0.15)',
-                    borderRadius: '12px',
-                    padding: '32px',
-                    textAlign: 'center',
-                    color: '#4D6A8A',
-                    fontSize: '0.85rem',
-                  }}
-                >
+                <div style={{ background: 'rgba(9,24,48,0.6)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '12px', padding: '32px', textAlign: 'center', color: '#4D6A8A', fontSize: '0.85rem' }}>
                   Nenhuma proposta ainda. Crie a primeira!
                 </div>
               )}
 
               {proposals.map((p) => {
-                const statusInfo = STATUS_LABELS[p.status] ?? { label: p.status, color: '#8BA8CC' }
+                const si = STATUS_LABELS[p.status] ?? { label: p.status, color: '#8BA8CC' }
                 const link = `${baseUrl}/p/${p.id}`
                 return (
-                  <div
-                    key={p.id}
-                    style={{
-                      background: 'rgba(9, 24, 48, 0.7)',
-                      border: '1px solid rgba(26, 86, 219, 0.15)',
-                      borderRadius: '12px',
-                      padding: '18px 20px',
-                    }}
-                  >
+                  <div key={p.id} style={{ background: 'rgba(9,24,48,0.7)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '12px', padding: '18px 20px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                       <div>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#F0F6FF' }}>
-                          {p.nome_cliente}
-                        </div>
-                        <div style={{ fontSize: '0.76rem', color: '#4D6A8A', marginTop: '2px' }}>
-                          AIT: {p.ait} · {p.tipo_infracao}
-                        </div>
+                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#F0F6FF' }}>{p.nome_cliente}</div>
+                        <div style={{ fontSize: '0.76rem', color: '#4D6A8A', marginTop: '2px' }}>AIT: {p.ait} · {p.tipo_infracao}</div>
                       </div>
-                      <span
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          color: statusInfo.color,
-                          background: `${statusInfo.color}18`,
-                          border: `1px solid ${statusInfo.color}30`,
-                          borderRadius: '100px',
-                          padding: '3px 10px',
-                          letterSpacing: '0.04em',
-                        }}
-                      >
-                        {statusInfo.label}
+                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: si.color, background: `${si.color}18`, border: `1px solid ${si.color}30`, borderRadius: '100px', padding: '3px 10px', letterSpacing: '0.04em' }}>
+                        {si.label}
                       </span>
                     </div>
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div style={{ fontSize: '0.76rem', color: '#4D6A8A' }}>
-                        {fmtDate(p.created_at)} · {fmt(p.valor_gestao)}
+                        {fmtDate(p.created_at)} · PIX {fmt(p.valor_essencial_pix)}
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(link)
-                          }}
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid rgba(26,86,219,0.2)',
-                            color: '#60A5FA',
-                            borderRadius: '6px',
-                            padding: '5px 10px',
-                            fontSize: '0.72rem',
-                            cursor: 'pointer',
-                          }}
-                        >
+                        <button onClick={() => navigator.clipboard.writeText(link)} style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 10px', fontSize: '0.72rem', cursor: 'pointer' }}>
                           Copiar link
                         </button>
-                        <a
-                          href={link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            background: 'transparent',
-                            border: '1px solid rgba(26,86,219,0.2)',
-                            color: '#60A5FA',
-                            borderRadius: '6px',
-                            padding: '5px 10px',
-                            fontSize: '0.72rem',
-                            cursor: 'pointer',
-                            textDecoration: 'none',
-                          }}
-                        >
+                        <a href={link} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 10px', fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'none' }}>
                           Abrir
                         </a>
                       </div>
@@ -636,6 +366,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
               })}
             </div>
           </div>
+
         </div>
       </div>
     </div>

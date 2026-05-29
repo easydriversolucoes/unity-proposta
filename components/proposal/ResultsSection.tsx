@@ -1,10 +1,10 @@
 import { RevealWrapper } from './RevealWrapper'
 
 const stats = [
-  { value: '24', label: 'Deferimentos nos últimos 30 dias', suffix: '' },
-  { value: '3.800', label: 'Processos analisados', suffix: '+' },
-  { value: '94', label: 'Taxa de êxito estratégico', suffix: '%' },
-  { value: '11', label: 'Anos de atuação especializada', suffix: '+' },
+  { value: '24',    label: 'Deferimentos nos últimos 30 dias', suffix: '' },
+  { value: '3.800', label: 'Processos analisados',             suffix: '+' },
+  { value: '96,4',  label: 'Taxa de êxito estratégico',        suffix: '%' },
+  { value: '11',    label: 'Anos de atuação especializada',    suffix: '+' },
 ]
 
 export function ResultsSection() {
@@ -50,10 +50,7 @@ export function ResultsSection() {
         >
           {stats.map((stat, i) => (
             <RevealWrapper key={i} delay={i * 100}>
-              <div
-                className="card-premium"
-                style={{ padding: '32px 24px', textAlign: 'center' }}
-              >
+              <div className="card-premium" style={{ padding: '32px 24px', textAlign: 'center' }}>
                 <div
                   style={{
                     fontSize: 'clamp(2rem, 4vw, 2.8rem)',
@@ -70,15 +67,13 @@ export function ResultsSection() {
                   {stat.value}
                   <span style={{ fontSize: '1.2rem' }}>{stat.suffix}</span>
                 </div>
-                <div style={{ fontSize: '0.82rem', color: '#8BA8CC', lineHeight: 1.5 }}>
-                  {stat.label}
-                </div>
+                <div style={{ fontSize: '0.82rem', color: '#8BA8CC', lineHeight: 1.5 }}>{stat.label}</div>
               </div>
             </RevealWrapper>
           ))}
         </div>
 
-        {/* Recent results mini-cards */}
+        {/* Recent results */}
         <RevealWrapper>
           <div
             style={{
@@ -88,14 +83,14 @@ export function ResultsSection() {
               padding: '32px',
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '20px',
+              gap: '16px',
             }}
           >
             {[
-              { status: 'Deferido', tipo: 'Lei Seca', data: 'Mai/2025', uf: 'SP' },
-              { status: 'Deferido', tipo: 'Lei Seca', data: 'Mai/2025', uf: 'RJ' },
-              { status: 'Deferido', tipo: 'Lei Seca', data: 'Abr/2025', uf: 'MG' },
-              { status: 'Deferido', tipo: 'Lei Seca', data: 'Abr/2025', uf: 'PR' },
+              { status: 'Deferido', tipo: 'Lei Seca', data: 'Mai/2026', uf: 'SP' },
+              { status: 'Deferido', tipo: 'Lei Seca', data: 'Mai/2026', uf: 'RJ' },
+              { status: 'Deferido', tipo: 'Lei Seca', data: 'Abr/2026', uf: 'MG' },
+              { status: 'Deferido', tipo: 'Lei Seca', data: 'Abr/2026', uf: 'PR' },
             ].map((r, i) => (
               <div
                 key={i}
@@ -111,19 +106,14 @@ export function ResultsSection() {
               >
                 <div
                   style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    background: '#10B981',
-                    flexShrink: 0,
-                    boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)',
+                    width: '8px', height: '8px', borderRadius: '50%',
+                    background: '#10B981', flexShrink: 0,
+                    boxShadow: '0 0 6px rgba(16,185,129,0.6)',
                   }}
                 />
                 <div>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#6EE7B7' }}>{r.status}</div>
-                  <div style={{ fontSize: '0.74rem', color: '#8BA8CC' }}>
-                    {r.tipo} · {r.uf} · {r.data}
-                  </div>
+                  <div style={{ fontSize: '0.74rem', color: '#8BA8CC' }}>{r.tipo} · {r.uf} · {r.data}</div>
                 </div>
               </div>
             ))}

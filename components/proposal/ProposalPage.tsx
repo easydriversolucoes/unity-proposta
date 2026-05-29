@@ -1,8 +1,6 @@
 import type { Proposal } from '@/types/proposal'
 import { Header } from './Header'
 import { HeroSection } from './HeroSection'
-import { StatusSection } from './StatusSection'
-import { RisksSection } from './RisksSection'
 import { ModalitiesSection } from './ModalitiesSection'
 import { ResultsSection } from './ResultsSection'
 import { SignatureSection } from './SignatureSection'
@@ -22,22 +20,21 @@ export function ProposalPage({ proposal }: ProposalPageProps) {
         tipoInfracao={proposal.tipo_infracao}
         prazoValidade={proposal.prazo_validade}
       />
-      <StatusSection />
-      <RisksSection />
       <ModalitiesSection
-        valorEssencial={proposal.valor_essencial}
-        valorGestao={proposal.valor_gestao}
-        linkPagamentoEssencial={proposal.link_pagamento_essencial}
-        linkPagamentoGestao={proposal.link_pagamento_gestao}
+        valorEssencialPix={proposal.valor_essencial_pix}
+        valorEssencialCartao={proposal.valor_essencial_cartao}
+        valorGestaoPix={proposal.valor_gestao_pix}
+        valorGestaoCartao={proposal.valor_gestao_cartao}
       />
       <ResultsSection />
       <SignatureSection
         proposalId={proposal.id}
         clientName={proposal.nome_cliente}
-        linkPagamentoEssencial={proposal.link_pagamento_essencial}
-        linkPagamentoGestao={proposal.link_pagamento_gestao}
-        valorEssencial={proposal.valor_essencial}
-        valorGestao={proposal.valor_gestao}
+        ait={proposal.ait}
+        valorEssencialPix={proposal.valor_essencial_pix}
+        valorEssencialCartao={proposal.valor_essencial_cartao}
+        valorGestaoPix={proposal.valor_gestao_pix}
+        valorGestaoCartao={proposal.valor_gestao_cartao}
       />
       <Footer />
     </div>

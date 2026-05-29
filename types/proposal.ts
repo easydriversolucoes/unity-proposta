@@ -5,10 +5,10 @@ export interface Proposal {
   nome_cliente: string
   ait: string
   tipo_infracao: string
-  valor_essencial: number
-  valor_gestao: number
-  link_pagamento_essencial: string | null
-  link_pagamento_gestao: string | null
+  valor_essencial_pix: number
+  valor_essencial_cartao: number
+  valor_gestao_pix: number
+  valor_gestao_cartao: number
   prazo_validade: string | null
   observacoes: string | null
   status: ProposalStatus
@@ -22,10 +22,10 @@ export interface CreateProposalInput {
   nome_cliente: string
   ait: string
   tipo_infracao: string
-  valor_essencial: number
-  valor_gestao: number
-  link_pagamento_essencial?: string
-  link_pagamento_gestao?: string
+  valor_essencial_pix: number
+  valor_essencial_cartao: number
+  valor_gestao_pix: number
+  valor_gestao_cartao: number
   prazo_validade?: string
   observacoes?: string
 }

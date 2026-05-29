@@ -1,3 +1,6 @@
+import Image from 'next/image'
+import { CountdownBadge } from './CountdownBadge'
+
 interface HeroSectionProps {
   clientName: string
   ait: string
@@ -40,23 +43,24 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 420px',
+            gridTemplateColumns: '1fr 400px',
             gap: '64px',
             alignItems: 'center',
           }}
         >
-          {/* Left — content */}
+          {/* Left */}
           <div>
             {/* Tag */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '28px' }}>
               <span className="badge-green">
                 <span style={{ marginRight: '6px' }}>●</span>
                 Análise Estratégica Concluída
               </span>
               {prazoValidade && (
-                <span className="badge-blue">
-                  Válido até {formatDate(prazoValidade)}
-                </span>
+                <>
+                  <span className="badge-blue">Válido até {formatDate(prazoValidade)}</span>
+                  <CountdownBadge prazoValidade={prazoValidade} />
+                </>
               )}
             </div>
 
@@ -72,7 +76,7 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
                 letterSpacing: '-0.02em',
               }}
             >
-              Estrutura estratégica definida para{' '}
+              Evita multa e{' '}
               <span
                 style={{
                   background: 'linear-gradient(135deg, #60A5FA 0%, #93C5FD 100%)',
@@ -81,11 +85,11 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
                   backgroundClip: 'text',
                 }}
               >
-                preservação da sua CNH
+                suspensão da CNH
               </span>
             </h1>
 
-            {/* Client name highlight */}
+            {/* Client badge */}
             <div
               className="animate-fade-up delay-100"
               style={{
@@ -119,8 +123,8 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
                 maxWidth: '560px',
               }}
             >
-              Com base nos documentos e informações enviadas, nossa equipe identificou viabilidade
-              técnica para atuação estratégica no seu processo administrativo — infração:{' '}
+              Com base nos documentos e informações enviadas, nossa equipe identificou viabilidade técnica
+              para atuação estratégica no seu processo administrativo. Infração e suspensão:{' '}
               <strong style={{ color: '#60A5FA' }}>{tipoInfracao}</strong>.
             </p>
 
@@ -205,7 +209,7 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
               </span>
             </div>
 
-            {/* Photo area */}
+            {/* Photo — coloque sua foto em /public/lidiane.jpg */}
             <div
               style={{
                 borderRadius: '20px',
@@ -213,59 +217,37 @@ export function HeroSection({ clientName, ait, tipoInfracao, prazoValidade }: He
                 border: '1px solid rgba(26, 86, 219, 0.25)',
                 background: 'linear-gradient(160deg, #0A1E3D 0%, #040C18 100%)',
                 aspectRatio: '3/4',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(26,86,219,0.15)',
                 position: 'relative',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(26,86,219,0.15)',
               }}
             >
-              {/* Inner glow */}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: 'radial-gradient(ellipse at 50% 30%, rgba(26,86,219,0.1) 0%, transparent 60%)',
-                }}
+              <Image
+                src="/lidiane.jpg"
+                alt="Lidiane Azevedo"
+                fill
+                style={{ objectFit: 'cover', objectPosition: 'center top' }}
+                priority
               />
-
-              {/* Avatar placeholder — replace with <Image> when you have the photo */}
-              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -60%)', textAlign: 'center' }}>
-                <div
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    borderRadius: '50%',
-                    background: 'rgba(26,86,219,0.15)',
-                    border: '2px solid rgba(26,86,219,0.3)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px',
-                  }}
-                >
-                  <span style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1A56DB' }}>LA</span>
-                </div>
-              </div>
 
               {/* Name card at bottom */}
               <div
                 style={{
-                  position: 'relative',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
                   zIndex: 2,
-                  background: 'rgba(4, 12, 24, 0.9)',
+                  background: 'rgba(4, 12, 24, 0.92)',
                   backdropFilter: 'blur(12px)',
                   borderTop: '1px solid rgba(26,86,219,0.2)',
-                  width: '100%',
-                  padding: '20px 24px',
+                  padding: '18px 24px',
                 }}
               >
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: '#F0F6FF' }}>Lidiane Azevedo</div>
                 <div style={{ fontSize: '0.78rem', color: '#8BA8CC', marginTop: '2px' }}>
-                  Especialista Estratégica · OAB
+                  Ex-julgadora DETRAN SP · Credenciada IBDAT
                 </div>
-                <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
                   <span className="badge-blue" style={{ fontSize: '0.65rem' }}>Lei Seca</span>
                   <span className="badge-blue" style={{ fontSize: '0.65rem' }}>Recursos Administrativos</span>
                 </div>
