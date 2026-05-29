@@ -85,10 +85,10 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
     tipo_infracao: INFRACTION_TYPES[0],
     valor_essencial_pix: '1100',
     valor_essencial_cartao: '1500',
-    parcelas_essencial: '1',
+    parcelas_essencial: '10',
     valor_gestao_pix: '',
     valor_gestao_cartao: '',
-    parcelas_gestao: '1',
+    parcelas_gestao: '10',
     mostrar_gestao: false,
     prazo_validade: '',
     observacoes: '',
@@ -130,8 +130,8 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
         setProposals(updated)
         setForm({
           nome_cliente: '', ait: '', tipo_infracao: INFRACTION_TYPES[0],
-          valor_essencial_pix: '1100', valor_essencial_cartao: '1500', parcelas_essencial: '1',
-          valor_gestao_pix: '', valor_gestao_cartao: '', parcelas_gestao: '1',
+          valor_essencial_pix: '1100', valor_essencial_cartao: '1500', parcelas_essencial: '10',
+          valor_gestao_pix: '', valor_gestao_cartao: '', parcelas_gestao: '10',
           mostrar_gestao: false,
           prazo_validade: '', observacoes: '',
         })
@@ -272,17 +272,24 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
                 </div>
 
                 {/* Gestão de Notificações */}
-                <div>
-                  <div style={sectionTitle}>Gestão de Notificações — Valores (adicional)</div>
+                <div style={{ opacity: form.mostrar_gestao ? 1 : 0.4, pointerEvents: form.mostrar_gestao ? 'auto' : 'none', transition: 'opacity 0.2s ease' }}>
+                  <div style={sectionTitle}>
+                    Gestão de Notificações — Valores (adicional)
+                    {!form.mostrar_gestao && (
+                      <span style={{ fontSize: '0.65rem', color: '#4D6A8A', fontWeight: 400, letterSpacing: '0.04em', marginLeft: '8px', textTransform: 'none' }}>
+                        — ative o toggle acima para habilitar
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
                     <label>
-                      <span style={labelStyle}>Valor PIX *</span>
-                      <input style={fieldStyle} type="number" required placeholder="Ex: 300" min="0" step="0.01"
+                      <span style={labelStyle}>Valor PIX {form.mostrar_gestao ? '*' : ''}</span>
+                      <input style={fieldStyle} type="number" required={form.mostrar_gestao} placeholder="Ex: 300" min="0" step="0.01"
                         value={form.valor_gestao_pix} onChange={(e) => f('valor_gestao_pix', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                     <label>
-                      <span style={labelStyle}>Valor Cartão *</span>
-                      <input style={fieldStyle} type="number" required placeholder="Ex: 350" min="0" step="0.01"
+                      <span style={labelStyle}>Valor Cartão {form.mostrar_gestao ? '*' : ''}</span>
+                      <input style={fieldStyle} type="number" required={form.mostrar_gestao} placeholder="Ex: 350" min="0" step="0.01"
                         value={form.valor_gestao_cartao} onChange={(e) => f('valor_gestao_cartao', e.target.value)} onFocus={FOCUS} onBlur={BLUR} />
                     </label>
                     <label>
