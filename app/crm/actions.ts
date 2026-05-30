@@ -114,7 +114,9 @@ export async function linkPropostaAction(clienteId: string, propostaId: string) 
   await requireAuth()
   try {
     await linkPropostaToCliente(clienteId, propostaId)
-    await createAtividade(clienteId, `Proposta ${propostaId} gerada e vinculada ao cliente`, 'proposta')
+    // Move automatically to "proposta_enviada"
+    await updateClienteEtapa(clienteId, 'proposta_enviada')
+    await createAtividade(clienteId, `Proposta ${propostaId} gerada — movido para "Proposta enviada"`, 'proposta')
     revalidatePath('/crm')
     return { ok: true as const }
   } catch (err) {

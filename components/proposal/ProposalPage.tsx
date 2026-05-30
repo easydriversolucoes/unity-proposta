@@ -41,6 +41,7 @@ export function ProposalPage({ proposal }: ProposalPageProps) {
         valorGestaoCartao={proposal.valor_gestao_cartao}
         parcelasGestao={proposal.parcelas_gestao}
         mostrarGestao={proposal.mostrar_gestao}
+        proposalStatus={proposal.status}
       />
       <Footer />
     </div>

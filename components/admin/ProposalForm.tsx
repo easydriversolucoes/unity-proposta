@@ -1,6 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { createProposalAction, logoutAction, getProposalsAction } from '@/app/admin/actions'
+import { createProposalAction, logoutAction, getProposalsAction, approveProposalAction } from '@/app/admin/actions'
 import { linkPropostaAction } from '@/app/crm/actions'
 import AdminNav from '@/components/admin/AdminNav'
 import type { Proposal } from '@/types/proposal'
@@ -15,6 +15,7 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   enviada:     { label: 'Enviada',     color: '#60A5FA' },
   visualizada: { label: 'Visualizada', color: '#E8B84B' },
   em_analise:  { label: 'Em análise',  color: '#A78BFA' },
+  aprovada:    { label: 'Aprovada',    color: '#34D399' },
   contratada:  { label: 'Contratada',  color: '#6EE7B7' },
   expirada:    { label: 'Expirada',    color: '#4D6A8A' },
 }
@@ -33,6 +34,7 @@ interface ProposalFormProps {
   initialAit?: string
   clienteId?: string
   notifCount?: number
+  clienteTelefones?: Record<string, string | null>
 }
 
 const fieldStyle: React.CSSProperties = {
@@ -76,7 +78,7 @@ const BLUR = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLS
   e.target.style.borderColor = 'rgba(26,86,219,0.18)'
 }
 
-export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAit, clienteId, notifCount }: ProposalFormProps) {
+export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAit, clienteId, notifCount, clienteTelefones = {} }: ProposalFormProps) {
   const [proposals, setProposals] = useState<Proposal[]>(initialProposals)
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -436,26 +438,48 @@ export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAi
               {proposals.map((p) => {
                 const si = STATUS_LABELS[p.status] ?? { label: p.status, color: '#8BA8CC' }
                 const link = `${baseUrl}/p/${p.id}`
+                const telefone = clienteTelefones[p.id]
+                const canApprove = ['enviada', 'visualizada', 'em_analise'].includes(p.status)
                 return (
-                  <div key={p.id} style={{ background: 'rgba(9,24,48,0.7)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '12px', padding: '18px 20px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                  <div key={p.id} style={{ background: 'rgba(9,24,48,0.7)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '12px', padding: '16px 18px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                       <div>
-                        <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#F0F6FF' }}>{p.nome_cliente}</div>
-                        <div style={{ fontSize: '0.76rem', color: '#4D6A8A', marginTop: '2px' }}>AIT: {p.ait} · {p.tipo_infracao}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#F0F6FF' }}>{p.nome_cliente}</div>
+                        <div style={{ fontSize: '0.74rem', color: '#4D6A8A', marginTop: '2px' }}>AIT: {p.ait} · {p.tipo_infracao}</div>
+                        {telefone && (
+                          <div style={{ fontSize: '0.73rem', color: '#60A5FA', marginTop: '2px' }}>📱 {telefone}</div>
+                        )}
                       </div>
-                      <span style={{ fontSize: '0.68rem', fontWeight: 700, color: si.color, background: `${si.color}18`, border: `1px solid ${si.color}30`, borderRadius: '100px', padding: '3px 10px', letterSpacing: '0.04em' }}>
+                      <span style={{ fontSize: '0.67rem', fontWeight: 700, color: si.color, background: `${si.color}18`, border: `1px solid ${si.color}30`, borderRadius: '100px', padding: '3px 10px', letterSpacing: '0.04em', flexShrink: 0 }}>
                         {si.label}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontSize: '0.76rem', color: '#4D6A8A' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                      <div style={{ fontSize: '0.74rem', color: '#4D6A8A' }}>
                         {fmtDate(p.created_at)} · PIX {fmt(p.valor_essencial_pix)}
                       </div>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => navigator.clipboard.writeText(link)} style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 10px', fontSize: '0.72rem', cursor: 'pointer' }}>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {canApprove && (
+                          <button
+                            onClick={() => {
+                              startTransition(async () => {
+                                const res = await approveProposalAction(p.id)
+                                if (res.ok) {
+                                  const updated = await getProposalsAction()
+                                  setProposals(updated)
+                                }
+                              })
+                            }}
+                            disabled={isPending}
+                            style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', color: '#34D399', borderRadius: '6px', padding: '5px 9px', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                          >
+                            ✓ Aprovar
+                          </button>
+                        )}
+                        <button onClick={() => navigator.clipboard.writeText(link)} style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 9px', fontSize: '0.7rem', cursor: 'pointer' }}>
                           Copiar link
                         </button>
-                        <a href={link} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 10px', fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'none' }}>
+                        <a href={link} target="_blank" rel="noopener noreferrer" style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#60A5FA', borderRadius: '6px', padding: '5px 9px', fontSize: '0.7rem', cursor: 'pointer', textDecoration: 'none' }}>
                           Abrir
                         </a>
                       </div>

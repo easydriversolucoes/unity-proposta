@@ -1,4 +1,17 @@
-export type ProposalStatus = 'enviada' | 'visualizada' | 'em_analise' | 'contratada' | 'expirada'
+export type ProposalStatus = 'enviada' | 'visualizada' | 'em_analise' | 'aprovada' | 'contratada' | 'expirada'
+
+export interface DadosContrato {
+  nome: string
+  rg: string
+  cpf: string
+  email: string
+  cep: string
+  endereco: string
+  numero: string
+  bairro: string
+  cidade: string
+  estado: string
+}
 
 export interface Proposal {
   id: string
@@ -19,6 +32,7 @@ export interface Proposal {
   viewed_at: string | null
   accepted_at: string | null
   plano_aceito: string | null
+  dados_contrato: DadosContrato | null
 }
 
 export interface CreateProposalInput {

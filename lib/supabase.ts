@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Proposal, CreateProposalInput } from '@/types/proposal'
+import type { Proposal, CreateProposalInput, DadosContrato } from '@/types/proposal'
 
 function supabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -64,16 +64,26 @@ export async function markAsViewed(id: string): Promise<void> {
     .eq('status', 'enviada')
 }
 
-export async function acceptProposal(id: string, plano: string): Promise<void> {
+export async function acceptProposal(id: string, plano: string, dadosContrato: DadosContrato): Promise<void> {
   const client = supabaseAdmin()
   await client
     .from('propostas')
     .update({
       accepted_at: new Date().toISOString(),
-      status: 'contratada',
+      status: 'aprovada',
       plano_aceito: plano,
+      dados_contrato: dadosContrato,
     })
     .eq('id', id.toUpperCase())
+}
+
+export async function approveProposalManually(id: string): Promise<void> {
+  const client = supabaseAdmin()
+  await client
+    .from('propostas')
+    .update({ status: 'aprovada', accepted_at: new Date().toISOString() })
+    .eq('id', id.toUpperCase())
+    .in('status', ['enviada', 'visualizada', 'em_analise'])
 }
 
 export async function listProposals(): Promise<Proposal[]> {

@@ -66,6 +66,40 @@ export async function linkPropostaToCliente(clienteId: string, propostaId: strin
   await db().from('clientes').update({ proposta_id: propostaId }).eq('id', clienteId)
 }
 
+export async function getClienteByPropostaId(propostaId: string): Promise<Cliente | null> {
+  const { data } = await db()
+    .from('clientes')
+    .select('*')
+    .eq('proposta_id', propostaId)
+    .maybeSingle()
+  return data as Cliente | null
+}
+
+export async function getClientesTelefoneMap(): Promise<Record<string, string | null>> {
+  const { data } = await db()
+    .from('clientes')
+    .select('proposta_id, telefone, whatsapp')
+    .not('proposta_id', 'is', null)
+  if (!data) return {}
+  return Object.fromEntries(
+    data.map((c: { proposta_id: string; telefone: string | null; whatsapp: string | null }) => [
+      c.proposta_id,
+      c.whatsapp ?? c.telefone ?? null,
+    ]),
+  )
+}
+
+export async function moverClienteAutomatico(propostaId: string, novaEtapa: EtapaCRM): Promise<void> {
+  const cliente = await getClienteByPropostaId(propostaId)
+  if (!cliente) return
+  await updateClienteEtapa(cliente.id, novaEtapa)
+  await createAtividade(
+    cliente.id,
+    `Movido automaticamente para "${novaEtapa.replace(/_/g, ' ')}" (gatilho: proposta)`,
+    'proposta',
+  )
+}
+
 export async function listFollowupsHoje(): Promise<Cliente[]> {
   const today = new Date().toISOString().split('T')[0]
   const { data } = await db()

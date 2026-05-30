@@ -1,6 +1,6 @@
 'use server'
 import { cookies } from 'next/headers'
-import { createProposal, listProposals } from '@/lib/supabase'
+import { createProposal, listProposals, approveProposalManually } from '@/lib/supabase'
 import type { CreateProposalInput } from '@/types/proposal'
 
 const COOKIE_NAME = 'unity_admin'
@@ -40,4 +40,13 @@ export async function createProposalAction(
 
 export async function getProposalsAction() {
   return listProposals()
+}
+
+export async function approveProposalAction(id: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await approveProposalManually(id)
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Erro desconhecido.' }
+  }
 }

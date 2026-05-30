@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { getProposal, markAsViewed } from '@/lib/supabase'
+import { getProposal } from '@/lib/supabase'
+import { markViewedAndUpdateCRMAction } from '@/app/p/[id]/actions'
 import { ProposalPage } from '@/components/proposal/ProposalPage'
 import type { Metadata } from 'next'
 
@@ -33,7 +34,7 @@ export default async function ProposalRoute({ params }: PageProps) {
 
   if (!proposal) notFound()
 
-  await markAsViewed(id).catch(() => {})
+  await markViewedAndUpdateCRMAction(id).catch(() => {})
 
   return <ProposalPage proposal={proposal} />
 }

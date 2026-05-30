@@ -3,7 +3,7 @@ import { isAuthenticated } from '@/lib/auth'
 import { LoginForm } from '@/components/admin/LoginForm'
 import { ProposalForm } from '@/components/admin/ProposalForm'
 import { listProposals } from '@/lib/supabase'
-import { getNotificacoes } from '@/lib/supabase-crm'
+import { getNotificacoes, getClientesTelefoneMap } from '@/lib/supabase-crm'
 import type { Proposal } from '@/types/proposal'
 
 export const dynamic = 'force-dynamic'
@@ -26,9 +26,10 @@ export default async function AdminPage({
     return <LoginForm />
   }
 
-  const [proposals, notifData, baseUrl, params] = await Promise.all([
+  const [proposals, notifData, telefoneMap, baseUrl, params] = await Promise.all([
     listProposals().catch(() => [] as Proposal[]),
     getNotificacoes().catch(() => ({ followupsVencidos: [], followupsHoje: [], resultadosRecentes: [], propostasRecentes: [] })),
+    getClientesTelefoneMap().catch(() => ({} as Record<string, string | null>)),
     getBaseUrl(),
     searchParams,
   ])
@@ -43,6 +44,7 @@ export default async function AdminPage({
       initialAit={params.ait}
       clienteId={params.cliente_id}
       notifCount={notifCount}
+      clienteTelefones={telefoneMap}
     />
   )
 }

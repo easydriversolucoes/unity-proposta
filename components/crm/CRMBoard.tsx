@@ -296,12 +296,16 @@ function FollowUpModal({
 
 // ─── Create Cliente Modal ─────────────────────────────────────────────────────
 
+function capWords(s: string) {
+  return s.replace(/(^|\s)\S/g, (c) => c.toUpperCase())
+}
+
 function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCreated: (c: Cliente) => void }) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
     nome: '', telefone: '', whatsapp: '', cpf: '', placa: '',
-    ait: '', tipo_infracao: '', origem: '', tem_suspensao: false,
+    ait: '', tipo_infracao: '', orgao: '', origem: '', tem_suspensao: false,
   })
   const f = (k: string, v: string | boolean) => setForm((p) => ({ ...p, [k]: v }))
 
@@ -317,6 +321,7 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
         placa: form.placa || undefined,
         ait: form.ait || undefined,
         tipo_infracao: form.tipo_infracao || undefined,
+        orgao: form.orgao || undefined,
         origem: form.origem || undefined,
         tem_suspensao: form.tem_suspensao,
       })
@@ -333,7 +338,7 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <label style={{ gridColumn: '1/-1' }}>
               <span style={S.label}>Nome *</span>
-              <input style={S.field} required value={form.nome} onChange={(e) => f('nome', e.target.value)} placeholder="Nome completo" />
+              <input style={S.field} required value={form.nome} onChange={(e) => f('nome', capWords(e.target.value))} placeholder="Nome completo" />
             </label>
             <label>
               <span style={S.label}>Telefone</span>
@@ -363,6 +368,10 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
                   <option key={t} value={t} style={{ background: '#040C18' }}>{t}</option>
                 ))}
               </select>
+            </label>
+            <label>
+              <span style={S.label}>Órgão autuador</span>
+              <input style={S.field} value={form.orgao} onChange={(e) => f('orgao', e.target.value.toUpperCase())} placeholder="DETRAN, PRF, PMSP..." />
             </label>
             <label>
               <span style={S.label}>Origem</span>
