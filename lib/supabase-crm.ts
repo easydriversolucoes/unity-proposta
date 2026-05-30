@@ -76,6 +76,48 @@ export async function listFollowupsHoje(): Promise<Cliente[]> {
   return (data ?? []) as Cliente[]
 }
 
+export async function getNotificacoes() {
+  const today = new Date().toISOString().split('T')[0]
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+
+  const [followupsVencidos, followupsHoje, resultadosRecentes, propostasRecentes] = await Promise.all([
+    db()
+      .from('clientes')
+      .select('*')
+      .lt('followup_data', today)
+      .eq('etapa', 'aguardando_resposta')
+      .order('followup_data', { ascending: true })
+      .then((r) => (r.data ?? []) as Cliente[]),
+
+    db()
+      .from('clientes')
+      .select('*')
+      .eq('followup_data', today)
+      .eq('etapa', 'aguardando_resposta')
+      .then((r) => (r.data ?? []) as Cliente[]),
+
+    db()
+      .from('atividades')
+      .select('*')
+      .eq('tipo', 'resultado')
+      .gte('created_at', sevenDaysAgo)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then((r) => (r.data ?? []) as Atividade[]),
+
+    db()
+      .from('propostas')
+      .select('*')
+      .eq('status', 'contratada')
+      .gte('accepted_at', sevenDaysAgo)
+      .order('accepted_at', { ascending: false })
+      .limit(10)
+      .then((r) => r.data ?? []),
+  ])
+
+  return { followupsVencidos, followupsHoje, resultadosRecentes, propostasRecentes }
+}
+
 // ─── Atividades ───────────────────────────────────────────────────────────────
 
 export async function listAtividades(clienteId: string): Promise<Atividade[]> {

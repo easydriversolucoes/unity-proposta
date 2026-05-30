@@ -2,6 +2,7 @@
 import { useState, useTransition } from 'react'
 import { createProposalAction, logoutAction, getProposalsAction } from '@/app/admin/actions'
 import { linkPropostaAction } from '@/app/crm/actions'
+import AdminNav from '@/components/admin/AdminNav'
 import type { Proposal } from '@/types/proposal'
 
 const INFRACTION_TYPES = [
@@ -31,6 +32,7 @@ interface ProposalFormProps {
   initialNome?: string
   initialAit?: string
   clienteId?: string
+  notifCount?: number
 }
 
 const fieldStyle: React.CSSProperties = {
@@ -74,7 +76,7 @@ const BLUR = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLS
   e.target.style.borderColor = 'rgba(26,86,219,0.18)'
 }
 
-export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAit, clienteId }: ProposalFormProps) {
+export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAit, clienteId, notifCount }: ProposalFormProps) {
   const [proposals, setProposals] = useState<Proposal[]>(initialProposals)
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -170,33 +172,28 @@ export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAi
           borderBottom: '1px solid rgba(26,86,219,0.15)',
           backdropFilter: 'blur(16px)',
           position: 'sticky', top: 0, zIndex: 50,
-          padding: '0 32px', height: '68px',
+          padding: '0 24px', height: '60px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '16px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '32px', height: '32px',
-              background: 'linear-gradient(135deg, #1A56DB 0%, #1E40AF 100%)',
-              borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-              <path d="M12 2v20M3 7l9 5 9-5" stroke="white" strokeWidth="1.5" />
-            </svg>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg,#1A56DB,#1E40AF)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M12 2v20M3 7l9 5 9-5" stroke="white" strokeWidth="1.5" />
+              </svg>
+            </div>
+            <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F0F6FF' }}>
+              Unity Multas
+            </span>
           </div>
-          <span style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-            Unity Multas
-          </span>
-          <span style={{ background: 'rgba(26,86,219,0.12)', border: '1px solid rgba(26,86,219,0.25)', color: '#60A5FA', borderRadius: '100px', padding: '2px 10px', fontSize: '0.68rem', fontWeight: 600, letterSpacing: '0.06em' }}>
-            Painel Interno
-          </span>
+          <AdminNav notifCount={notifCount} />
         </div>
         <button
           onClick={handleLogout}
-          style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#8BA8CC', borderRadius: '8px', padding: '8px 16px', fontSize: '0.8rem', cursor: 'pointer' }}
+          style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#8BA8CC', borderRadius: '8px', padding: '7px 14px', fontSize: '0.78rem', cursor: 'pointer', flexShrink: 0 }}
         >
           Sair
         </button>

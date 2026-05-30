@@ -3,6 +3,7 @@ import { isAuthenticated } from '@/lib/auth'
 import { LoginForm } from '@/components/admin/LoginForm'
 import { ProposalForm } from '@/components/admin/ProposalForm'
 import { listProposals } from '@/lib/supabase'
+import { getNotificacoes } from '@/lib/supabase-crm'
 import type { Proposal } from '@/types/proposal'
 
 export const dynamic = 'force-dynamic'
@@ -25,15 +26,14 @@ export default async function AdminPage({
     return <LoginForm />
   }
 
-  let proposals: Proposal[] = []
-  try {
-    proposals = await listProposals()
-  } catch {
-    // Supabase not configured yet — show empty list instead of crashing
-  }
+  const [proposals, notifData, baseUrl, params] = await Promise.all([
+    listProposals().catch(() => [] as Proposal[]),
+    getNotificacoes().catch(() => ({ followupsVencidos: [], followupsHoje: [], resultadosRecentes: [], propostasRecentes: [] })),
+    getBaseUrl(),
+    searchParams,
+  ])
 
-  const baseUrl = await getBaseUrl()
-  const params = await searchParams
+  const notifCount = notifData.followupsVencidos.length + notifData.followupsHoje.length
 
   return (
     <ProposalForm
@@ -42,6 +42,7 @@ export default async function AdminPage({
       initialNome={params.nome}
       initialAit={params.ait}
       clienteId={params.cliente_id}
+      notifCount={notifCount}
     />
   )
 }
