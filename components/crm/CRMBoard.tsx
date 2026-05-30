@@ -1,6 +1,8 @@
 'use client'
-import { useState, useTransition, useCallback } from 'react'
+import { useState, useTransition, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import AdminNav from '@/components/admin/AdminNav'
+import Image from 'next/image'
 import {
   DndContext,
   DragEndEvent,
@@ -20,6 +22,7 @@ import {
   addAtividadeAction,
   getAtividadesAction,
   updateClienteAction,
+  scheduleFollowUpAction,
 } from '@/app/crm/actions'
 
 // ─── Style helpers ────────────────────────────────────────────────────────────
@@ -304,7 +307,7 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
-    nome: '', telefone: '', whatsapp: '', cpf: '', placa: '',
+    nome: '', whatsapp: '', placa: '',
     ait: '', tipo_infracao: '', orgao: '', origem: '', tem_suspensao: false,
   })
   const f = (k: string, v: string | boolean) => setForm((p) => ({ ...p, [k]: v }))
@@ -315,9 +318,7 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
     startTransition(async () => {
       const res = await createClienteAction({
         nome: form.nome.trim(),
-        telefone: form.telefone || undefined,
         whatsapp: form.whatsapp || undefined,
-        cpf: form.cpf || undefined,
         placa: form.placa || undefined,
         ait: form.ait || undefined,
         tipo_infracao: form.tipo_infracao || undefined,
@@ -341,16 +342,8 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
               <input style={S.field} required value={form.nome} onChange={(e) => f('nome', capWords(e.target.value))} placeholder="Nome completo" />
             </label>
             <label>
-              <span style={S.label}>Telefone</span>
-              <input style={S.field} value={form.telefone} onChange={(e) => f('telefone', e.target.value)} placeholder="(11) 99999-9999" />
-            </label>
-            <label>
               <span style={S.label}>WhatsApp</span>
               <input style={S.field} value={form.whatsapp} onChange={(e) => f('whatsapp', e.target.value)} placeholder="(11) 99999-9999" />
-            </label>
-            <label>
-              <span style={S.label}>CPF</span>
-              <input style={S.field} value={form.cpf} onChange={(e) => f('cpf', e.target.value)} placeholder="000.000.000-00" />
             </label>
             <label>
               <span style={S.label}>Placa</span>
@@ -422,11 +415,12 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
 
 // ─── Cliente Modal (details + activity) ──────────────────────────────────────
 
-function ClienteModal({ clienteId, clientes, onClose, onUpdate }: {
+function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollowUp }: {
   clienteId: string
   clientes: Cliente[]
   onClose: () => void
   onUpdate: (updated: Partial<Cliente> & { id: string }) => void
+  onScheduleFollowUp: (clienteId: string) => void
 }) {
   const cliente = clientes.find((c) => c.id === clienteId)
   const [atividades, setAtividades] = useState<Atividade[]>([])
@@ -443,9 +437,8 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate }: {
     setLoadingAts(false)
   }, [clienteId])
 
-  useState(() => { loadAtividades() })
+  useEffect(() => { loadAtividades() }, [loadAtividades])
 
-  // Using useEffect-like pattern via initial state call
   if (!cliente) return null
 
   function addNota() {
@@ -539,20 +532,29 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate }: {
           </div>
         )}
 
-        {/* Gerar proposta button */}
-        <a
-          href={`/admin?nome=${encodeURIComponent(cliente.nome)}&ait=${encodeURIComponent(cliente.ait ?? '')}&cliente_id=${cliente.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'block', textAlign: 'center', padding: '10px',
-            background: 'rgba(196,146,42,0.1)', border: '1px solid rgba(196,146,42,0.3)',
-            borderRadius: '8px', color: '#E8B84B', fontSize: '0.8rem', fontWeight: 700,
-            textDecoration: 'none', marginBottom: '16px',
-          }}
-        >
-          📄 Gerar proposta
-        </a>
+        {/* Actions row */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <a
+            href={`/admin?nome=${encodeURIComponent(cliente.nome)}&ait=${encodeURIComponent(cliente.ait ?? '')}&cliente_id=${cliente.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+            style={{
+              flex: 1, display: 'block', textAlign: 'center', padding: '10px',
+              background: 'rgba(196,146,42,0.1)', border: '1px solid rgba(196,146,42,0.3)',
+              borderRadius: '8px', color: '#E8B84B', fontSize: '0.8rem', fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            📄 Gerar proposta
+          </a>
+          <button
+            onClick={() => { onScheduleFollowUp(cliente.id); onClose() }}
+            style={{ flex: 1, padding: '10px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '8px', color: '#FBBF24', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            ⏰ Agendar follow-up
+          </button>
+        </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(26,86,219,0.12)', margin: '0 0 16px' }} />
 
@@ -603,12 +605,17 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate }: {
 // ─── Main Board ───────────────────────────────────────────────────────────────
 
 export default function CRMBoard({ initialClientes }: { initialClientes: Cliente[] }) {
+  const router = useRouter()
   const [clientes, setClientes] = useState<Cliente[]>(initialClientes)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [pendingDrop, setPendingDrop] = useState<{ clienteId: string } | null>(null)
   const [openClienteId, setOpenClienteId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [followUpStandaloneId, setFollowUpStandaloneId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // Sync local state when server data refreshes
+  useEffect(() => { setClientes(initialClientes) }, [initialClientes])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -638,8 +645,9 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
     startTransition(async () => {
       const res = await moveClienteAction(clienteId, targetEtapa)
       if (!res.ok) {
-        // Revert
         setClientes((prev) => prev.map((c) => c.id === clienteId ? { ...c, etapa: cliente.etapa } : c))
+      } else {
+        router.refresh()
       }
     })
   }
@@ -662,7 +670,24 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
       const res = await moveClienteAction(clienteId, 'aguardando_resposta', data)
       if (!res.ok) {
         setClientes((prev) => prev.map((c) => c.id === clienteId ? { ...c, etapa: cliente.etapa } : c))
+      } else {
+        router.refresh()
       }
+    })
+  }
+
+  function handleStandaloneFollowUpSubmit(data: { followup_data: string; followup_canal: string; nota: string }) {
+    if (!followUpStandaloneId) return
+    const clienteId = followUpStandaloneId
+    setFollowUpStandaloneId(null)
+    setClientes((prev) => prev.map((c) =>
+      c.id === clienteId
+        ? { ...c, followup_data: data.followup_data, followup_canal: data.followup_canal, followup_contagem: c.followup_contagem + 1 }
+        : c,
+    ))
+    startTransition(async () => {
+      await scheduleFollowUpAction(clienteId, data)
+      router.refresh()
     })
   }
 
@@ -674,10 +699,8 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
       {/* Header */}
       <header style={{ background: 'rgba(4,12,24,0.95)', borderBottom: '1px solid rgba(26,86,219,0.15)', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50, padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg,#1A56DB,#1E40AF)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" /></svg>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <Image src="/logo.png" alt="Unity Multas" width={32} height={32} style={{ objectFit: 'contain', height: '32px', width: 'auto' }} priority />
             <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Unity Multas</span>
           </div>
           <AdminNav />
@@ -719,6 +742,18 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
         />
       )}
 
+      {followUpStandaloneId && (() => {
+        const c = clientes.find((x) => x.id === followUpStandaloneId)
+        return c ? (
+          <FollowUpModal
+            clienteNome={c.nome}
+            onClose={() => setFollowUpStandaloneId(null)}
+            onSubmit={handleStandaloneFollowUpSubmit}
+            isPending={isPending}
+          />
+        ) : null
+      })()}
+
       {openClienteId && (
         <ClienteModal
           clienteId={openClienteId}
@@ -726,7 +761,9 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
           onClose={() => setOpenClienteId(null)}
           onUpdate={(updated) => {
             setClientes((prev) => prev.map((c) => c.id === updated.id ? { ...c, ...updated } : c))
+            router.refresh()
           }}
+          onScheduleFollowUp={(id) => setFollowUpStandaloneId(id)}
         />
       )}
 
@@ -736,6 +773,7 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
           onCreated={(c) => {
             setClientes((prev) => [c, ...prev])
             setShowCreate(false)
+            router.refresh()
           }}
         />
       )}

@@ -77,6 +77,15 @@ export async function acceptProposal(id: string, plano: string, dadosContrato: D
     .eq('id', id.toUpperCase())
 }
 
+export async function submitDadosContrato(id: string, dados: DadosContrato): Promise<void> {
+  const client = supabaseAdmin()
+  await client
+    .from('propostas')
+    .update({ dados_contrato: dados })
+    .eq('id', id.toUpperCase())
+    .eq('status', 'aprovada')
+}
+
 export async function approveProposalManually(id: string): Promise<void> {
   const client = supabaseAdmin()
   await client

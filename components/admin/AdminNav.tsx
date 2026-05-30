@@ -1,6 +1,5 @@
 'use client'
 import { usePathname } from 'next/navigation'
-import Image from 'next/image'
 
 const NAV_ITEMS = [
   {
@@ -56,21 +55,7 @@ export default function AdminNav({ notifCount }: { notifCount?: number }) {
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-      {/* Logo */}
-      <a href="/admin" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', marginRight: '4px' }}>
-        <Image
-          src="/logo.png"
-          alt="Unity Multas"
-          width={28}
-          height={28}
-          style={{ objectFit: 'contain', height: '28px', width: 'auto' }}
-          priority
-        />
-      </a>
-
-      {/* Nav items */}
-      <nav style={{ display: 'flex', gap: '2px' }}>
+    <nav style={{ display: 'flex', gap: '2px' }}>
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href)
           const showBadge = item.href === '/notificacoes' && notifCount && notifCount > 0
@@ -120,6 +105,5 @@ export default function AdminNav({ notifCount }: { notifCount?: number }) {
           )
         })}
       </nav>
-    </div>
   )
 }

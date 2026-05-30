@@ -1,6 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { acceptProposalAction } from '@/app/p/[id]/actions'
+import { acceptProposalAction, submitDadosContratoAction } from '@/app/p/[id]/actions'
 import type { ProposalStatus, DadosContrato } from '@/types/proposal'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -83,6 +83,8 @@ interface SignatureSectionProps {
   parcelasGestao: number
   mostrarGestao: boolean
   proposalStatus: ProposalStatus
+  dadosContrato?: DadosContrato | null
+  planoAceito?: string | null
 }
 
 // ─── Done screen ──────────────────────────────────────────────────────────────
@@ -134,8 +136,8 @@ function ContratoForm({
   plano, pgto, totalLabel,
   onBack, onSubmit, isPending,
 }: {
-  plano: string; pgto: string; totalLabel: string
-  onBack: () => void
+  plano: string | null; pgto: string | null; totalLabel: string | null
+  onBack: (() => void) | null
   onSubmit: (dados: DadosContrato) => void
   isPending: boolean
 }) {
@@ -229,13 +231,15 @@ function ContratoForm({
         background: 'rgba(9,24,48,0.85)', border: '1px solid rgba(26,86,219,0.2)',
         borderRadius: '20px', padding: '32px', backdropFilter: 'blur(12px)',
       }}>
-        {/* Resumo da seleção */}
-        <div style={{ background: 'rgba(26,86,219,0.06)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '10px', padding: '12px 16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', color: '#8BA8CC' }}>
-            {plano === 'essencial' ? 'Defesa Estratégica' : 'Defesa + Gestão'} · {pgto === 'pix' ? 'PIX' : 'Cartão'}
-          </span>
-          <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F0F6FF' }}>{totalLabel}</span>
-        </div>
+        {/* Resumo da seleção — só quando vem do fluxo de seleção */}
+        {totalLabel && (
+          <div style={{ background: 'rgba(26,86,219,0.06)', border: '1px solid rgba(26,86,219,0.15)', borderRadius: '10px', padding: '12px 16px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', color: '#8BA8CC' }}>
+              {plano === 'essencial' ? 'Defesa Estratégica' : 'Defesa + Gestão'} · {pgto === 'pix' ? 'PIX' : 'Cartão'}
+            </span>
+            <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F0F6FF' }}>{totalLabel}</span>
+          </div>
+        )}
 
         {/* Dados pessoais */}
         <div style={SECTION_TITLE}>Dados pessoais</div>
@@ -291,16 +295,18 @@ function ContratoForm({
 
         {/* Buttons */}
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="button" onClick={onBack} style={{ flex: 1, padding: '13px', background: 'transparent', border: '1px solid rgba(26,86,219,0.25)', borderRadius: '10px', color: '#8BA8CC', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'inherit' }}>
-            ← Voltar
-          </button>
+          {onBack && (
+            <button type="button" onClick={onBack} style={{ flex: 1, padding: '13px', background: 'transparent', border: '1px solid rgba(26,86,219,0.25)', borderRadius: '10px', color: '#8BA8CC', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'inherit' }}>
+              ← Voltar
+            </button>
+          )}
           <button
             type="submit"
             disabled={isPending}
             className="btn-primary"
-            style={{ flex: 2, padding: '13px', fontSize: '0.92rem', justifyContent: 'center', opacity: isPending ? 0.7 : 1, cursor: isPending ? 'wait' : 'pointer' }}
+            style={{ flex: onBack ? 2 : 1, padding: '13px', fontSize: '0.92rem', justifyContent: 'center', opacity: isPending ? 0.7 : 1, cursor: isPending ? 'wait' : 'pointer' }}
           >
-            {isPending ? 'Enviando...' : '✓ Confirmar proposta'}
+            {isPending ? 'Enviando...' : '✓ Confirmar e enviar dados'}
           </button>
         </div>
       </div>
@@ -310,18 +316,25 @@ function ContratoForm({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
+function resolveInitialStep(status: ProposalStatus, dados: DadosContrato | null | undefined): Step {
+  if (status === 'contratada') return 'done'
+  if (status === 'aprovada') return dados ? 'done' : 'contrato'
+  return 'selection'
+}
+
 export function SignatureSection({
   proposalId, clientName, ait,
   valorEssencialPix, valorEssencialCartao, parcelasEssencial,
   valorGestaoPix, valorGestaoCartao, parcelasGestao,
-  mostrarGestao, proposalStatus,
+  mostrarGestao, proposalStatus, dadosContrato, planoAceito,
 }: SignatureSectionProps) {
-  const alreadyDone = proposalStatus === 'aprovada' || proposalStatus === 'contratada'
-  const [step, setStep] = useState<Step>(alreadyDone ? 'done' : 'selection')
+  const [step, setStep] = useState<Step>(() => resolveInitialStep(proposalStatus, dadosContrato))
   const [plano, setPlano] = useState<Plano>('essencial')
   const [pgto, setPgto] = useState<Pgto>('pix')
   const [agreed, setAgreed] = useState(false)
   const [isPending, startTransition] = useTransition()
+  // True when we arrived at 'contrato' because the proposal was already approved (admin or prior session)
+  const isAlreadyApproved = proposalStatus === 'aprovada' && !dadosContrato
 
   const totalPix = plano === 'essencial' ? valorEssencialPix : valorEssencialPix + valorGestaoPix
   const totalCartao = plano === 'essencial' ? valorEssencialCartao : valorEssencialCartao + valorGestaoCartao
@@ -336,7 +349,13 @@ export function SignatureSection({
 
   function handleContratoSubmit(dados: DadosContrato) {
     startTransition(async () => {
-      await acceptProposalAction(proposalId, `${plano}-${pgto}`, dados)
+      if (isAlreadyApproved) {
+        // Proposal was already approved (by admin or prior session) — just save contract data
+        await submitDadosContratoAction(proposalId, dados)
+      } else {
+        // Client is accepting for the first time — set status to aprovada
+        await acceptProposalAction(proposalId, `${plano}-${pgto}`, dados)
+      }
       setStep('done')
     })
   }
@@ -348,15 +367,32 @@ export function SignatureSection({
         {/* Header */}
         {step !== 'done' && (
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-            <span className="badge-blue" style={{ marginBottom: '16px' }}>Próximo passo</span>
-            <h2 style={{ fontSize: 'clamp(1.5rem,3vw,1.9rem)', fontWeight: 800, color: '#F0F6FF', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '14px' }}>
-              Confirmação da proposta
-            </h2>
-            <p style={{ fontSize: '0.95rem', color: '#8BA8CC', lineHeight: 1.7 }}>
-              {step === 'selection'
-                ? 'Selecione a modalidade e a forma de pagamento preferida.'
-                : 'Preencha seus dados para que possamos confeccionar o contrato.'}
-            </p>
+            {isAlreadyApproved ? (
+              <>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(110,231,183,0.1)', border: '1px solid rgba(110,231,183,0.3)', borderRadius: '100px', padding: '6px 16px', marginBottom: '20px' }}>
+                  <span style={{ fontSize: '0.9rem' }}>✅</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6EE7B7', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Proposta aprovada</span>
+                </div>
+                <h2 style={{ fontSize: 'clamp(1.4rem,3vw,1.8rem)', fontWeight: 800, color: '#F0F6FF', letterSpacing: '-0.02em', marginBottom: '14px' }}>
+                  Preencha seus dados para o contrato
+                </h2>
+                <p style={{ fontSize: '0.92rem', color: '#8BA8CC', lineHeight: 1.7 }}>
+                  Sua proposta já foi aprovada. Por favor, informe seus dados para que possamos elaborar o contrato.
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="badge-blue" style={{ marginBottom: '16px' }}>Próximo passo</span>
+                <h2 style={{ fontSize: 'clamp(1.5rem,3vw,1.9rem)', fontWeight: 800, color: '#F0F6FF', letterSpacing: '-0.02em', marginTop: '12px', marginBottom: '14px' }}>
+                  Confirmação da proposta
+                </h2>
+                <p style={{ fontSize: '0.95rem', color: '#8BA8CC', lineHeight: 1.7 }}>
+                  {step === 'selection'
+                    ? 'Selecione a modalidade e a forma de pagamento preferida.'
+                    : 'Preencha seus dados para que possamos confeccionar o contrato.'}
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -432,10 +468,10 @@ export function SignatureSection({
 
         {step === 'contrato' && (
           <ContratoForm
-            plano={plano}
-            pgto={pgto}
-            totalLabel={totalLabel()}
-            onBack={() => setStep('selection')}
+            plano={isAlreadyApproved ? null : plano}
+            pgto={isAlreadyApproved ? null : pgto}
+            totalLabel={isAlreadyApproved ? null : totalLabel()}
+            onBack={isAlreadyApproved ? null : () => setStep('selection')}
             onSubmit={handleContratoSubmit}
             isPending={isPending}
           />

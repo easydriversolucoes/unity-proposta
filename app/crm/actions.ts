@@ -110,6 +110,33 @@ export async function updateClienteAction(clienteId: string, data: Partial<impor
   }
 }
 
+export async function scheduleFollowUpAction(
+  clienteId: string,
+  data: { followup_data: string; followup_canal: string; nota?: string },
+) {
+  await requireAuth()
+  try {
+    const cliente = await getCliente(clienteId)
+    if (!cliente) throw new Error('Cliente não encontrado')
+
+    const newContagem = cliente.followup_contagem + 1
+    await updateClienteEtapa(clienteId, cliente.etapa, {
+      followup_data: data.followup_data,
+      followup_canal: data.followup_canal,
+      followup_contagem: newContagem,
+    })
+
+    const dataFmt = new Date(data.followup_data + 'T12:00:00').toLocaleDateString('pt-BR')
+    let texto = `Follow-up ${newContagem}ª tentativa agendado para ${dataFmt} via ${data.followup_canal}`
+    if (data.nota) texto += ` · ${data.nota}`
+    await createAtividade(clienteId, texto, 'follow_up')
+    revalidatePath('/crm')
+    return { ok: true as const }
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : 'Erro desconhecido' }
+  }
+}
+
 export async function linkPropostaAction(clienteId: string, propostaId: string) {
   await requireAuth()
   try {

@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react'
 import { createProposalAction, logoutAction, getProposalsAction, approveProposalAction } from '@/app/admin/actions'
 import { linkPropostaAction } from '@/app/crm/actions'
 import AdminNav from '@/components/admin/AdminNav'
+import Image from 'next/image'
 import type { Proposal } from '@/types/proposal'
 
 const INFRACTION_TYPES = [
@@ -165,6 +166,48 @@ export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAi
     })
   }
 
+  // Block proposal creation unless a CRM client is selected
+  if (!clienteId) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#040C18', fontFamily: 'Inter, system-ui, sans-serif', color: '#F0F6FF', display: 'flex', flexDirection: 'column' }}>
+        <header style={{ background: 'rgba(4,12,24,0.95)', borderBottom: '1px solid rgba(26,86,219,0.15)', backdropFilter: 'blur(16px)', position: 'sticky', top: 0, zIndex: 50, padding: '0 24px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+              <Image src="/logo.png" alt="Unity Multas" width={32} height={32} style={{ objectFit: 'contain', height: '32px', width: 'auto' }} priority />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F0F6FF' }}>Unity Multas</span>
+            </div>
+            <AdminNav notifCount={notifCount} />
+          </div>
+          <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid rgba(26,86,219,0.2)', color: '#8BA8CC', borderRadius: '8px', padding: '7px 14px', fontSize: '0.78rem', cursor: 'pointer', flexShrink: 0 }}>
+            Sair
+          </button>
+        </header>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
+          <div style={{ maxWidth: '480px', textAlign: 'center' }}>
+            <div style={{ width: '64px', height: '64px', background: 'rgba(26,86,219,0.1)', border: '1px solid rgba(26,86,219,0.25)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12h6M9 16h6M9 8h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke="#60A5FA" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </div>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F0F6FF', marginBottom: '12px' }}>
+              Selecione um cliente no CRM
+            </h2>
+            <p style={{ fontSize: '0.88rem', color: '#8BA8CC', lineHeight: 1.7, marginBottom: '28px' }}>
+              Propostas só podem ser criadas para clientes cadastrados no CRM. Abra o card do cliente e clique em{' '}
+              <strong style={{ color: '#E8B84B' }}>"📄 Gerar proposta"</strong>.
+            </p>
+            <a
+              href="/crm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 28px', background: 'linear-gradient(135deg,#1A56DB,#1E40AF)', borderRadius: '10px', color: 'white', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', boxShadow: '0 4px 20px rgba(26,86,219,0.4)' }}
+            >
+              Ir para o CRM
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: '#040C18', fontFamily: 'Inter, system-ui, sans-serif', color: '#F0F6FF' }}>
       {/* Header */}
@@ -180,13 +223,8 @@ export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAi
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-            <div style={{ width: '28px', height: '28px', background: 'linear-gradient(135deg,#1A56DB,#1E40AF)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-                <path d="M12 2v20M3 7l9 5 9-5" stroke="white" strokeWidth="1.5" />
-              </svg>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+            <Image src="/logo.png" alt="Unity Multas" width={32} height={32} style={{ objectFit: 'contain', height: '32px', width: 'auto' }} priority />
             <span style={{ fontSize: '0.82rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#F0F6FF' }}>
               Unity Multas
             </span>

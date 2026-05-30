@@ -1,5 +1,5 @@
 'use server'
-import { acceptProposal, markAsViewed } from '@/lib/supabase'
+import { acceptProposal, markAsViewed, submitDadosContrato } from '@/lib/supabase'
 import { moverClienteAutomatico } from '@/lib/supabase-crm'
 import type { DadosContrato } from '@/types/proposal'
 
@@ -11,6 +11,13 @@ export async function acceptProposalAction(
   await acceptProposal(id, plano, dadosContrato)
   // Move cliente to "proposta_aprovada" in CRM
   await moverClienteAutomatico(id, 'proposta_aprovada').catch(() => {})
+}
+
+export async function submitDadosContratoAction(
+  id: string,
+  dadosContrato: DadosContrato,
+): Promise<void> {
+  await submitDadosContrato(id, dadosContrato)
 }
 
 export async function markViewedAndUpdateCRMAction(id: string): Promise<void> {
