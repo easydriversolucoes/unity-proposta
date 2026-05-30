@@ -1,6 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { createProposalAction, logoutAction, getProposalsAction } from '@/app/admin/actions'
+import { linkPropostaAction } from '@/app/crm/actions'
 import type { Proposal } from '@/types/proposal'
 
 const INFRACTION_TYPES = [
@@ -27,6 +28,9 @@ function fmtDate(d: string) {
 interface ProposalFormProps {
   initialProposals: Proposal[]
   baseUrl: string
+  initialNome?: string
+  initialAit?: string
+  clienteId?: string
 }
 
 const fieldStyle: React.CSSProperties = {
@@ -70,15 +74,15 @@ const BLUR = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLS
   e.target.style.borderColor = 'rgba(26,86,219,0.18)'
 }
 
-export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
+export function ProposalForm({ initialProposals, baseUrl, initialNome, initialAit, clienteId }: ProposalFormProps) {
   const [proposals, setProposals] = useState<Proposal[]>(initialProposals)
   const [generatedLink, setGeneratedLink] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [form, setForm] = useState({
-    nome_cliente: '',
-    ait: '',
+    nome_cliente: initialNome ?? '',
+    ait: initialAit ?? '',
     tipo_infracao: INFRACTION_TYPES[0],
     valor_essencial_pix: '1100',
     valor_essencial_cartao: '1500',
@@ -127,6 +131,7 @@ export function ProposalForm({ initialProposals, baseUrl }: ProposalFormProps) {
       })
       if (result.ok && result.id) {
         setGeneratedLink(`${baseUrl}/p/${result.id}`)
+        if (clienteId) await linkPropostaAction(clienteId, result.id)
         const updated = await getProposalsAction()
         setProposals(updated)
         setForm({
