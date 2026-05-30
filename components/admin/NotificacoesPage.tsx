@@ -10,6 +10,7 @@ interface Props {
     resultadosRecentes: Atividade[]
     propostasRecentes: { id: string; nome_cliente: string; accepted_at: string | null; valor_essencial_pix: number }[]
   }
+  notifCount?: number
 }
 
 function fmtDate(iso: string) {
@@ -56,9 +57,9 @@ function EmptyState({ message }: { message: string }) {
   )
 }
 
-export default function NotificacoesPage({ data }: Props) {
+export default function NotificacoesPage({ data, notifCount }: Props) {
   const { followupsVencidos, followupsHoje, resultadosRecentes, propostasRecentes } = data
-  const totalUrgente = followupsVencidos.length + followupsHoje.length
+  const totalUrgente = notifCount ?? (followupsVencidos.length + followupsHoje.length)
 
   return (
     <div style={{ minHeight: '100vh', background: '#040C18', fontFamily: 'Inter, system-ui, sans-serif', color: '#F0F6FF' }}>

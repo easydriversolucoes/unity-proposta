@@ -4,7 +4,7 @@ import { requireAuth } from '@/lib/auth'
 import {
   listClientes, getCliente, createCliente, updateClienteEtapa, updateCliente,
   createAtividade, listAtividades, linkPropostaToCliente,
-  createProcesso, createTarefa,
+  createProcesso, createTarefa, clearFollowUp, listFollowUpsAgendados,
 } from '@/lib/supabase-crm'
 import type { EtapaCRM, CreateClienteInput, Atividade } from '@/types/crm'
 import { ETAPA_LABELS } from '@/types/crm'
@@ -130,6 +130,79 @@ export async function scheduleFollowUpAction(
     let texto = `Follow-up ${newContagem}ª tentativa agendado para ${dataFmt} via ${data.followup_canal}`
     if (data.nota) texto += ` · ${data.nota}`
     await createAtividade(clienteId, texto, 'follow_up')
+    revalidatePath('/crm')
+    return { ok: true as const }
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : 'Erro desconhecido' }
+  }
+}
+
+export async function getFollowUpsAction() {
+  await requireAuth()
+  return listFollowUpsAgendados()
+}
+
+export async function registrarContatoAction(
+  clienteId: string,
+  nota: string,
+  novoFollowUp?: { followup_data: string; followup_canal: string },
+) {
+  await requireAuth()
+  try {
+    const cliente = await getCliente(clienteId)
+    if (!cliente) throw new Error('Cliente não encontrado')
+
+    const textoContato = nota.trim() || `Contato realizado via ${cliente.followup_canal ?? 'canal não especificado'}`
+    await createAtividade(clienteId, textoContato, 'contato')
+
+    if (novoFollowUp) {
+      const newContagem = cliente.followup_contagem + 1
+      await updateClienteEtapa(clienteId, cliente.etapa, {
+        followup_data: novoFollowUp.followup_data,
+        followup_canal: novoFollowUp.followup_canal,
+        followup_contagem: newContagem,
+      })
+      const dataFmt = new Date(novoFollowUp.followup_data + 'T12:00:00').toLocaleDateString('pt-BR')
+      await createAtividade(
+        clienteId,
+        `Próximo follow-up agendado para ${dataFmt} via ${novoFollowUp.followup_canal}`,
+        'follow_up',
+      )
+    } else {
+      await clearFollowUp(clienteId)
+    }
+
+    revalidatePath('/followups')
+    revalidatePath('/crm')
+    return { ok: true as const }
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : 'Erro desconhecido' }
+  }
+}
+
+export async function reagendarFollowUpAction(
+  clienteId: string,
+  followup_data: string,
+  followup_canal: string,
+  nota?: string,
+) {
+  await requireAuth()
+  try {
+    const cliente = await getCliente(clienteId)
+    if (!cliente) throw new Error('Cliente não encontrado')
+
+    const newContagem = cliente.followup_contagem + 1
+    await updateClienteEtapa(clienteId, cliente.etapa, {
+      followup_data,
+      followup_canal,
+      followup_contagem: newContagem,
+    })
+    const dataFmt = new Date(followup_data + 'T12:00:00').toLocaleDateString('pt-BR')
+    let texto = `Follow-up reagendado: ${newContagem}ª tentativa em ${dataFmt} via ${followup_canal}`
+    if (nota?.trim()) texto += ` · ${nota.trim()}`
+    await createAtividade(clienteId, texto, 'follow_up')
+
+    revalidatePath('/followups')
     revalidatePath('/crm')
     return { ok: true as const }
   } catch (err) {

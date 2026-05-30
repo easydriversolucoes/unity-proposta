@@ -100,6 +100,22 @@ export async function moverClienteAutomatico(propostaId: string, novaEtapa: Etap
   )
 }
 
+export async function listFollowUpsAgendados(): Promise<Cliente[]> {
+  const { data } = await db()
+    .from('clientes')
+    .select('*')
+    .not('followup_data', 'is', null)
+    .order('followup_data', { ascending: true })
+  return (data ?? []) as Cliente[]
+}
+
+export async function clearFollowUp(clienteId: string): Promise<void> {
+  await db()
+    .from('clientes')
+    .update({ followup_data: null, followup_canal: null })
+    .eq('id', clienteId)
+}
+
 export async function listFollowupsHoje(): Promise<Cliente[]> {
   const today = new Date().toISOString().split('T')[0]
   const { data } = await db()

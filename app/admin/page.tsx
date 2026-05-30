@@ -1,50 +1,32 @@
-import { headers } from 'next/headers'
 import { isAuthenticated } from '@/lib/auth'
 import { LoginForm } from '@/components/admin/LoginForm'
-import { ProposalForm } from '@/components/admin/ProposalForm'
-import { listProposals } from '@/lib/supabase'
-import { getNotificacoes, getClientesTelefoneMap } from '@/lib/supabase-crm'
-import type { Proposal } from '@/types/proposal'
+import { getNotificacoes } from '@/lib/supabase-crm'
+import NotificacoesPage from '@/components/admin/NotificacoesPage'
 
 export const dynamic = 'force-dynamic'
 
-async function getBaseUrl(): Promise<string> {
-  const hdrs = await headers()
-  const host = hdrs.get('host') ?? 'localhost:3000'
-  const proto = host.startsWith('localhost') ? 'http' : 'https'
-  return `${proto}://${host}`
+export const metadata = {
+  title: 'Unity Multas — Painel',
 }
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>
-}) {
+export default async function AdminHomePage() {
   const authed = await isAuthenticated()
+  if (!authed) return <LoginForm />
 
-  if (!authed) {
-    return <LoginForm />
+  let data: Awaited<ReturnType<typeof getNotificacoes>> = {
+    followupsVencidos: [],
+    followupsHoje: [],
+    resultadosRecentes: [],
+    propostasRecentes: [],
   }
 
-  const [proposals, notifData, telefoneMap, baseUrl, params] = await Promise.all([
-    listProposals().catch(() => [] as Proposal[]),
-    getNotificacoes().catch(() => ({ followupsVencidos: [], followupsHoje: [], resultadosRecentes: [], propostasRecentes: [] })),
-    getClientesTelefoneMap().catch(() => ({} as Record<string, string | null>)),
-    getBaseUrl(),
-    searchParams,
-  ])
+  try {
+    data = await getNotificacoes()
+  } catch {
+    // Supabase not configured yet
+  }
 
-  const notifCount = notifData.followupsVencidos.length + notifData.followupsHoje.length
+  const notifCount = data.followupsVencidos.length + data.followupsHoje.length
 
-  return (
-    <ProposalForm
-      initialProposals={proposals}
-      baseUrl={baseUrl}
-      initialNome={params.nome}
-      initialAit={params.ait}
-      clienteId={params.cliente_id}
-      notifCount={notifCount}
-      clienteTelefones={telefoneMap}
-    />
-  )
+  return <NotificacoesPage data={data} notifCount={notifCount} />
 }

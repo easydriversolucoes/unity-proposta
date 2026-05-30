@@ -535,7 +535,7 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
         {/* Actions row */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
           <a
-            href={`/admin?nome=${encodeURIComponent(cliente.nome)}&ait=${encodeURIComponent(cliente.ait ?? '')}&cliente_id=${cliente.id}`}
+            href={`/admin/propostas?nome=${encodeURIComponent(cliente.nome)}&ait=${encodeURIComponent(cliente.ait ?? '')}&cliente_id=${cliente.id}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onClose}

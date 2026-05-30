@@ -15,7 +15,7 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: '/admin',
+    href: '/admin/propostas',
     label: 'Propostas',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -34,7 +34,16 @@ const NAV_ITEMS = [
     ),
   },
   {
-    href: '/notificacoes',
+    href: '/followups',
+    label: 'Follow-ups',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.87 9.78a19.79 19.79 0 01-3.07-8.67A2 2 0 012.78 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.75a16 16 0 006.29 6.29l1.1-1.1a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    href: '/admin',
     label: 'Notificações',
     icon: (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -50,60 +59,62 @@ export default function AdminNav({ notifCount }: { notifCount?: number }) {
   function isActive(href: string) {
     if (href === '/crm') return pathname === '/crm'
     if (href === '/crm/execucao') return pathname.startsWith('/crm/execucao')
-    if (href === '/notificacoes') return pathname.startsWith('/notificacoes')
-    return pathname === '/admin' || pathname === '/'
+    if (href === '/admin/propostas') return pathname.startsWith('/admin/propostas')
+    if (href === '/followups') return pathname.startsWith('/followups')
+    if (href === '/admin') return pathname === '/admin' || pathname === '/' || pathname.startsWith('/notificacoes')
+    return false
   }
 
   return (
     <nav style={{ display: 'flex', gap: '2px' }}>
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(item.href)
-          const showBadge = item.href === '/notificacoes' && notifCount && notifCount > 0
+      {NAV_ITEMS.map((item) => {
+        const active = isActive(item.href)
+        const showBadge = item.href === '/admin' && notifCount && notifCount > 0
 
-          return (
-            <a
-              key={item.href}
-              href={item.href}
-              style={{
-                display: 'flex',
+        return (
+          <a
+            key={item.href}
+            href={item.href}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 11px',
+              borderRadius: '7px',
+              fontSize: '0.77rem',
+              fontWeight: active ? 600 : 400,
+              color: active ? '#60A5FA' : '#8BA8CC',
+              background: active ? 'rgba(26,86,219,0.12)' : 'transparent',
+              textDecoration: 'none',
+              transition: 'background 0.15s, color 0.15s',
+              position: 'relative',
+            }}
+          >
+            <span style={{ color: active ? '#60A5FA' : '#4D6A8A', display: 'flex' }}>
+              {item.icon}
+            </span>
+            {item.label}
+            {showBadge && (
+              <span style={{
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                padding: '6px 11px',
-                borderRadius: '7px',
-                fontSize: '0.77rem',
-                fontWeight: active ? 600 : 400,
-                color: active ? '#60A5FA' : '#8BA8CC',
-                background: active ? 'rgba(26,86,219,0.12)' : 'transparent',
-                textDecoration: 'none',
-                transition: 'background 0.15s, color 0.15s',
-                position: 'relative',
-              }}
-            >
-              <span style={{ color: active ? '#60A5FA' : '#4D6A8A', display: 'flex' }}>
-                {item.icon}
+                justifyContent: 'center',
+                minWidth: '17px',
+                height: '17px',
+                padding: '0 4px',
+                background: '#EF4444',
+                borderRadius: '100px',
+                fontSize: '0.6rem',
+                fontWeight: 700,
+                color: 'white',
+                lineHeight: 1,
+              }}>
+                {notifCount}
               </span>
-              {item.label}
-              {showBadge && (
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '17px',
-                  height: '17px',
-                  padding: '0 4px',
-                  background: '#EF4444',
-                  borderRadius: '100px',
-                  fontSize: '0.6rem',
-                  fontWeight: 700,
-                  color: 'white',
-                  lineHeight: 1,
-                }}>
-                  {notifCount}
-                </span>
-              )}
-            </a>
-          )
-        })}
-      </nav>
+            )}
+          </a>
+        )
+      })}
+    </nav>
   )
 }
