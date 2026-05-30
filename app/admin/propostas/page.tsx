@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { isAuthenticated } from '@/lib/auth'
 import { LoginForm } from '@/components/admin/LoginForm'
 import { ProposalForm } from '@/components/admin/ProposalForm'
+import PropostasListPage from '@/components/admin/PropostasListPage'
 import { listProposals } from '@/lib/supabase'
 import { getNotificacoes, getClientesTelefoneMap } from '@/lib/supabase-crm'
 import type { Proposal } from '@/types/proposal'
@@ -37,15 +38,28 @@ export default async function PropostasPage({
 
   const notifCount = notifData.followupsVencidos.length + notifData.followupsHoje.length
 
+  // When coming from CRM with a cliente_id, show the proposal creation form
+  if (params.cliente_id) {
+    return (
+      <ProposalForm
+        initialProposals={proposals}
+        baseUrl={baseUrl}
+        initialNome={params.nome}
+        initialAit={params.ait}
+        clienteId={params.cliente_id}
+        notifCount={notifCount}
+        clienteTelefones={telefoneMap}
+      />
+    )
+  }
+
+  // Default: show full proposals list
   return (
-    <ProposalForm
+    <PropostasListPage
       initialProposals={proposals}
       baseUrl={baseUrl}
-      initialNome={params.nome}
-      initialAit={params.ait}
-      clienteId={params.cliente_id}
-      notifCount={notifCount}
       clienteTelefones={telefoneMap}
+      notifCount={notifCount}
     />
   )
 }
