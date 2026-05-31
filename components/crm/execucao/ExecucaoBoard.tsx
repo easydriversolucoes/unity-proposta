@@ -80,14 +80,14 @@ const S = {
     maxHeight: '90vh', overflowY: 'auto' as const,
   },
   btn: (variant: 'primary' | 'secondary' | 'danger' | 'success') => ({
-    padding: '10px 16px', border: 'none', borderRadius: '8px',
+    padding: '10px 16px', borderRadius: '8px',
     fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
     background: variant === 'primary' ? 'linear-gradient(135deg,#1A56DB,#1E40AF)'
       : variant === 'success' ? 'linear-gradient(135deg,#059669,#047857)'
       : variant === 'danger' ? 'rgba(239,68,68,0.15)'
       : 'transparent',
-    border: variant === 'secondary' ? '1px solid rgba(26,86,219,0.25)' as string
-      : variant === 'danger' ? '1px solid rgba(239,68,68,0.35)' as string
+    border: variant === 'secondary' ? '1px solid rgba(26,86,219,0.25)'
+      : variant === 'danger' ? '1px solid rgba(239,68,68,0.35)'
       : 'none',
     color: variant === 'secondary' ? '#8BA8CC'
       : variant === 'danger' ? '#FCA5A5'
