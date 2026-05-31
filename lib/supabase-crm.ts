@@ -18,6 +18,7 @@ export async function listClientes(): Promise<Cliente[]> {
   const { data } = await db()
     .from('clientes')
     .select('*')
+    .is('pagamento_realizado_at', null)
     .order('created_at', { ascending: false })
   return (data ?? []) as Cliente[]
 }

@@ -108,8 +108,8 @@ function TarefaCardContent({ tarefa, isOverlay }: { tarefa: TarefaExecucao; isOv
   const waNum = (tarefa.clientes?.whatsapp ?? tarefa.clientes?.telefone ?? '').replace(/\D/g, '')
 
   const cardStyle: React.CSSProperties = {
-    background: tarefa.urgente ? 'rgba(239,68,68,0.06)' : lidiane ? 'rgba(236,72,153,0.06)' : 'rgba(9,24,48,0.85)',
-    border: tarefa.urgente ? '1px solid rgba(239,68,68,0.35)' : lidiane ? '1px solid rgba(236,72,153,0.3)' : '1px solid rgba(26,86,219,0.2)',
+    background: tarefa.urgente ? 'rgba(239,68,68,0.09)' : lidiane ? 'rgba(236,72,153,0.13)' : 'rgba(9,24,48,0.85)',
+    border: tarefa.urgente ? '1px solid rgba(239,68,68,0.45)' : lidiane ? '1px solid rgba(236,72,153,0.5)' : '1px solid rgba(26,86,219,0.2)',
     borderRadius: '10px', padding: '14px', marginBottom: '8px',
     cursor: isOverlay ? 'grabbing' : 'grab', userSelect: 'none',
   }
@@ -133,7 +133,7 @@ function TarefaCardContent({ tarefa, isOverlay }: { tarefa: TarefaExecucao; isOv
       {tarefa.clientes?.ait && <div style={{ fontSize: '0.72rem', color: '#8BA8CC' }}>AIT: {tarefa.clientes.ait}</div>}
       {tarefa.clientes?.tipo_infracao && <div style={{ fontSize: '0.72rem', color: '#4D6A8A', marginTop: '1px' }}>{tarefa.clientes.tipo_infracao}</div>}
 
-      <div style={{ fontSize: '0.7rem', marginTop: '6px', color: lidiane ? '#F9A8D4' : '#60A5FA' }}>
+      <div style={{ fontSize: '0.82rem', fontWeight: 700, marginTop: '6px', color: lidiane ? '#F472B6' : '#60A5FA' }}>
         👤 {tarefa.responsavel || 'Pablo'}
       </div>
 
@@ -145,6 +145,21 @@ function TarefaCardContent({ tarefa, isOverlay }: { tarefa: TarefaExecucao; isOv
       {tarefa.data_agendamento_envio && (
         <div style={{ fontSize: '0.7rem', color: '#A78BFA', marginTop: '3px' }}>📤 Envio: {fmtDateTime(tarefa.data_agendamento_envio)}</div>
       )}
+
+      {/* WA button for envio_agendado */}
+      {tarefa.etapa === 'envio_agendado' && waNum && tarefa.data_agendamento_envio && (
+        <div style={{ marginTop: '8px' }} onClick={(e) => e.stopPropagation()}>
+          <a
+            href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Olá ${tarefa.clientes?.nome}! Informamos que o seu recurso de multa foi finalizado e o envio está agendado para ${fmtDateTime(tarefa.data_agendamento_envio)}. Você receberá o documento no e-mail cadastrado. Qualquer dúvida, estamos à disposição! — Unity Multas`)}`}
+            target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 10px', background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)', borderRadius: '6px', color: '#A78BFA', fontSize: '0.68rem', fontWeight: 600, textDecoration: 'none' }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2.101 22l4.949-1.302A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.522 2 12 2z"/></svg>
+            Avisar envio
+          </a>
+        </div>
+      )}
+
       {tarefa.data_agendamento_protocolo && tarefa.etapa === 'aguardando_protocolo' && (
         <div style={{ fontSize: '0.7rem', color: '#F97316', marginTop: '3px', fontWeight: 600 }}>📅 Cadastro: {fmtDate(tarefa.data_agendamento_protocolo)}</div>
       )}
@@ -513,27 +528,34 @@ function CreateTarefaModal({ onClose, onRefresh, isPending, startTransition }: {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {(['infracao', 'suspensao'] as TipoProcesso[]).map((tipo) => {
                 const inst = instancias[tipo]
+                const accentColor = tipo === 'infracao' ? '#60A5FA' : '#E8B84B'
                 return (
-                  <div key={tipo}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <button onClick={() => toggleInstancia(tipo)} style={instanciaStyle(inst.enabled, tipo)}>
-                        {inst.enabled ? '✓' : '○'} {TIPO_PROCESSO_LABELS[tipo]}
-                      </button>
-                      {inst.enabled && (
-                        <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
-                          {(Object.entries(FASE_LABELS) as [FaseRecurso, string][]).map(([k, v]) => (
-                            <button key={k} onClick={() => setInstanciaFase(tipo, k)} style={{
-                              flex: 1, padding: '6px 4px', borderRadius: '6px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.72rem', fontWeight: 600,
-                              background: inst.fase === k ? 'rgba(26,86,219,0.18)' : 'rgba(9,24,48,0.6)',
-                              border: `1px solid ${inst.fase === k ? 'rgba(96,165,250,0.5)' : 'rgba(26,86,219,0.15)'}`,
-                              color: inst.fase === k ? '#60A5FA' : '#4D6A8A',
-                            }}>
-                              {v}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                  <div key={tipo} style={{ border: `1px solid ${inst.enabled ? accentColor + '50' : 'rgba(26,86,219,0.15)'}`, borderRadius: '10px', padding: '10px 12px', background: inst.enabled ? (tipo === 'infracao' ? 'rgba(96,165,250,0.06)' : 'rgba(196,146,42,0.06)') : 'rgba(9,24,48,0.4)', transition: 'all 0.15s' }}>
+                    {/* Toggle row */}
+                    <button
+                      onClick={() => toggleInstancia(tipo)}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem', fontWeight: 700, color: inst.enabled ? accentColor : '#8BA8CC', padding: 0, width: '100%', textAlign: 'left' }}
+                    >
+                      <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: `2px solid ${inst.enabled ? accentColor : 'rgba(26,86,219,0.3)'}`, background: inst.enabled ? accentColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                        {inst.enabled && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="#040C18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                      {TIPO_PROCESSO_LABELS[tipo]}
+                    </button>
+                    {/* Fase buttons (only when enabled) */}
+                    {inst.enabled && (
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+                        {(Object.entries(FASE_LABELS) as [FaseRecurso, string][]).map(([k, v]) => (
+                          <button key={k} onClick={() => setInstanciaFase(tipo, k)} style={{
+                            flex: 1, padding: '7px 4px', borderRadius: '7px', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.75rem', fontWeight: 600,
+                            background: inst.fase === k ? accentColor + '20' : 'rgba(9,24,48,0.6)',
+                            border: `1px solid ${inst.fase === k ? accentColor + '60' : 'rgba(26,86,219,0.15)'}`,
+                            color: inst.fase === k ? accentColor : '#4D6A8A',
+                          }}>
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )
               })}

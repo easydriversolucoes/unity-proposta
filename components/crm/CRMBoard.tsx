@@ -802,7 +802,7 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
           }}
           onScheduleFollowUp={(id) => setFollowUpStandaloneId(id)}
           onPagamentoRegistrado={(id) => {
-            setClientes((prev) => prev.map((c) => c.id === id ? { ...c, pagamento_realizado_at: new Date().toISOString() } : c))
+            setClientes((prev) => prev.filter((c) => c.id !== id))
             router.refresh()
           }}
         />
