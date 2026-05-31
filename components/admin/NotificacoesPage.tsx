@@ -1,7 +1,9 @@
 'use client'
+import { useState, useEffect } from 'react'
 import AdminNav from '@/components/admin/AdminNav'
 import Image from 'next/image'
 import type { Cliente, Atividade } from '@/types/crm'
+import { getNotificacoesAction } from '@/app/admin/actions'
 
 interface Props {
   data: {
@@ -57,7 +59,21 @@ function EmptyState({ message }: { message: string }) {
   )
 }
 
-export default function NotificacoesPage({ data, notifCount }: Props) {
+export default function NotificacoesPage({ data: initialData, notifCount: initialNotifCount }: Props) {
+  const [data, setData] = useState(initialData)
+  const [notifCount, setNotifCount] = useState(initialNotifCount)
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const updated = await getNotificacoesAction()
+        setData(updated)
+        setNotifCount(updated.followupsVencidos.length + updated.followupsHoje.length)
+      } catch { /* session expired or network error */ }
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const { followupsVencidos, followupsHoje, resultadosRecentes, propostasRecentes } = data
   const totalUrgente = notifCount ?? (followupsVencidos.length + followupsHoje.length)
 

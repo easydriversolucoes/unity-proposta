@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import AdminNav from '@/components/admin/AdminNav'
 import Image from 'next/image'
 import {
@@ -15,7 +15,7 @@ import {
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import type { TarefaExecucao, EtapaTarefa, FaseRecurso } from '@/types/crm'
 import { FASE_LABELS, TIPO_PROCESSO_LABELS } from '@/types/crm'
-import { moveTarefaAction, arquivarTarefaAction } from '@/app/crm/execucao/actions'
+import { moveTarefaAction, arquivarTarefaAction, getTarefasAction } from '@/app/crm/execucao/actions'
 
 const EXEC_COLUMNS: Array<{ id: EtapaTarefa; label: string; color: string }> = [
   { id: 'a_redigir', label: 'A redigir', color: '#60A5FA' },
@@ -233,6 +233,18 @@ export default function ExecucaoBoard({ initialTarefas }: { initialTarefas: Tare
   const [activeId, setActiveId] = useState<string | null>(null)
   const [pendingArchive, setPendingArchive] = useState<TarefaExecucao | null>(null)
   const [isPending, startTransition] = useTransition()
+  const draggingRef = useRef(false)
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      if (draggingRef.current) return
+      try {
+        const updated = await getTarefasAction()
+        setTarefas(updated)
+      } catch { /* session expired or network error */ }
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -240,10 +252,12 @@ export default function ExecucaoBoard({ initialTarefas }: { initialTarefas: Tare
   )
 
   function handleDragStart(e: DragStartEvent) {
+    draggingRef.current = true
     setActiveId(String(e.active.id))
   }
 
   function handleDragEnd(e: DragEndEvent) {
+    draggingRef.current = false
     setActiveId(null)
     const { active, over } = e
     if (!over) return

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useTransition, useCallback, useEffect } from 'react'
+import { useState, useTransition, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminNav from '@/components/admin/AdminNav'
 import Image from 'next/image'
@@ -21,6 +21,7 @@ import {
   createClienteAction,
   addAtividadeAction,
   getAtividadesAction,
+  getClientesAction,
   updateClienteAction,
   scheduleFollowUpAction,
 } from '@/app/crm/actions'
@@ -613,9 +614,22 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
   const [showCreate, setShowCreate] = useState(false)
   const [followUpStandaloneId, setFollowUpStandaloneId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const draggingRef = useRef(false)
 
   // Sync local state when server data refreshes
   useEffect(() => { setClientes(initialClientes) }, [initialClientes])
+
+  // Auto-refresh every 30s (skip during drag to avoid state conflicts)
+  useEffect(() => {
+    const id = setInterval(async () => {
+      if (draggingRef.current) return
+      try {
+        const updated = await getClientesAction()
+        setClientes(updated)
+      } catch { /* session expired or network error */ }
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -623,10 +637,12 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
   )
 
   function handleDragStart(event: DragStartEvent) {
+    draggingRef.current = true
     setActiveId(String(event.active.id))
   }
 
   function handleDragEnd(event: DragEndEvent) {
+    draggingRef.current = false
     setActiveId(null)
     const { active, over } = event
     if (!over) return

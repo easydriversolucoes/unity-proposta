@@ -1,11 +1,11 @@
 'use client'
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminNav from '@/components/admin/AdminNav'
 import Image from 'next/image'
 import type { Cliente } from '@/types/crm'
 import { ETAPA_LABELS } from '@/types/crm'
-import { registrarContatoAction, reagendarFollowUpAction } from '@/app/crm/actions'
+import { registrarContatoAction, reagendarFollowUpAction, getFollowUpsAction } from '@/app/crm/actions'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -370,6 +370,16 @@ export default function FollowUpsPage({
   const [clientes, setClientes] = useState(initialClientes)
   const [filter, setFilter] = useState<Filter>('todos')
   const [modal, setModal] = useState<{ type: 'registrar' | 'reagendar'; clienteId: string } | null>(null)
+
+  useEffect(() => {
+    const id = setInterval(async () => {
+      try {
+        const updated = await getFollowUpsAction()
+        setClientes(updated)
+      } catch { /* session expired or network error */ }
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   const filtered = useMemo(() => filterClientes(clientes, filter), [clientes, filter])
 

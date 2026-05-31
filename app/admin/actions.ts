@@ -1,6 +1,7 @@
 'use server'
 import { cookies } from 'next/headers'
 import { createProposal, listProposals, approveProposalManually } from '@/lib/supabase'
+import { moverClienteAutomatico, getNotificacoes } from '@/lib/supabase-crm'
 import type { CreateProposalInput } from '@/types/proposal'
 
 const COOKIE_NAME = 'unity_admin'
@@ -45,8 +46,22 @@ export async function getProposalsAction() {
 export async function approveProposalAction(id: string): Promise<{ ok: boolean; error?: string }> {
   try {
     await approveProposalManually(id)
+    await moverClienteAutomatico(id, 'proposta_aprovada').catch(() => {})
     return { ok: true }
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'Erro desconhecido.' }
   }
+}
+
+export async function notificarWhatsAppAction(id: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await moverClienteAutomatico(id, 'contrato').catch(() => {})
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : 'Erro desconhecido.' }
+  }
+}
+
+export async function getNotificacoesAction() {
+  return getNotificacoes()
 }
