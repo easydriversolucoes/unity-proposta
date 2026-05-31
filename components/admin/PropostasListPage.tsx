@@ -176,6 +176,11 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
               const link = `${baseUrl}/p/${p.id}`
               const telefone = clienteTelefones[p.id]
               const canApprove = ['enviada', 'visualizada', 'em_analise'].includes(p.status)
+              const hasContractData = !!p.dados_contrato
+              const waNumber = telefone?.replace(/\D/g, '')
+              const waMsg = encodeURIComponent(
+                `Olá ${p.nome_cliente}! Seu contrato foi enviado para o e-mail ${p.dados_contrato?.email ?? ''} via ClickSign para assinatura. Por favor, verifique sua caixa de entrada (e spam) e assine o quanto antes. Qualquer dúvida, estamos à disposição! — Unity Multas`
+              )
 
               return (
                 <div
@@ -213,13 +218,38 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
 
                   {/* Row 3: actions */}
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {/* Contract actions — only when contract data is filled */}
+                    {hasContractData && (
+                      <a
+                        href={`/api/contrato/${p.id}`}
+                        download
+                        style={{ padding: '7px 12px', background: 'rgba(196,146,42,0.12)', border: '1px solid rgba(196,146,42,0.35)', borderRadius: '7px', color: '#E8B84B', fontSize: '0.74rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        Baixar contrato PDF
+                      </a>
+                    )}
+                    {hasContractData && waNumber && (
+                      <a
+                        href={`https://wa.me/${waNumber}?text=${waMsg}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ padding: '7px 12px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '7px', color: '#34D399', fontSize: '0.74rem', fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2.101 22l4.949-1.302A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.522 2 12 2z"/></svg>
+                        Avisar no WhatsApp
+                      </a>
+                    )}
+
+                    <div style={{ width: '1px', background: 'rgba(26,86,219,0.15)', margin: '0 2px', display: hasContractData ? 'block' : 'none' }} />
+
                     {canApprove && (
                       <button
                         onClick={() => handleApprove(p.id)}
                         disabled={isPending}
-                        style={{ padding: '7px 12px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.3)', borderRadius: '7px', color: '#34D399', fontSize: '0.74rem', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer', fontFamily: 'inherit' }}
+                        style={{ padding: '7px 12px', background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '7px', color: '#34D399', fontSize: '0.74rem', fontWeight: 600, cursor: isPending ? 'wait' : 'pointer', fontFamily: 'inherit' }}
                       >
-                        ✓ Aprovar manualmente
+                        ✓ Aprovar
                       </button>
                     )}
                     <button
@@ -236,11 +266,6 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
                     >
                       Abrir ↗
                     </a>
-                    {p.dados_contrato && (
-                      <span style={{ padding: '7px 12px', background: 'rgba(110,231,183,0.06)', border: '1px solid rgba(110,231,183,0.2)', borderRadius: '7px', color: '#6EE7B7', fontSize: '0.74rem', fontWeight: 600 }}>
-                        Dados contrato ✓
-                      </span>
-                    )}
                   </div>
                 </div>
               )
