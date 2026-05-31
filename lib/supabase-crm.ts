@@ -18,7 +18,7 @@ export async function listClientes(): Promise<Cliente[]> {
   const { data } = await db()
     .from('clientes')
     .select('*')
-    .is('pagamento_realizado_at', null)
+    .neq('etapa', 'pagamento_realizado')
     .order('created_at', { ascending: false })
   return (data ?? []) as Cliente[]
 }
@@ -102,18 +102,26 @@ export async function moverClienteAutomatico(propostaId: string, novaEtapa: Etap
 }
 
 export async function registrarPagamento(clienteId: string): Promise<void> {
-  await db()
-    .from('clientes')
-    .update({ etapa: 'pagamento_realizado', pagamento_realizado_at: new Date().toISOString() })
-    .eq('id', clienteId)
+  const patch: Record<string, unknown> = { etapa: 'pagamento_realizado' }
+  // pagamento_realizado_at only set if column exists (migration 002)
+  try { patch.pagamento_realizado_at = new Date().toISOString() } catch { /* ignore */ }
+  const { error } = await db().from('clientes').update(patch).eq('id', clienteId)
+  if (error) {
+    // Retry without pagamento_realizado_at in case column doesn't exist yet
+    const { error: err2 } = await db()
+      .from('clientes')
+      .update({ etapa: 'pagamento_realizado' })
+      .eq('id', clienteId)
+    if (err2) throw new Error(err2.message)
+  }
 }
 
 export async function listClientesPagamento(): Promise<Cliente[]> {
   const { data } = await db()
     .from('clientes')
     .select('*')
-    .not('pagamento_realizado_at', 'is', null)
-    .order('pagamento_realizado_at', { ascending: false })
+    .eq('etapa', 'pagamento_realizado')
+    .order('created_at', { ascending: false })
   return (data ?? []) as Cliente[]
 }
 
@@ -121,7 +129,7 @@ export async function listClientesPagamentoSimples(): Promise<{ id: string; nome
   const { data } = await db()
     .from('clientes')
     .select('id, nome, ait, tem_suspensao, pagamento_realizado_at')
-    .not('pagamento_realizado_at', 'is', null)
+    .eq('etapa', 'pagamento_realizado')
     .order('nome', { ascending: true })
   return (data ?? []) as { id: string; nome: string; ait: string | null; tem_suspensao: boolean; pagamento_realizado_at: string | null }[]
 }

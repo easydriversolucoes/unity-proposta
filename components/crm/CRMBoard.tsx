@@ -432,6 +432,7 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
   const [isPending, startTransition] = useTransition()
   const [editMode, setEditMode] = useState(false)
   const [editForm, setEditForm] = useState<Partial<Cliente>>(cliente ?? {})
+  const [pagamentoError, setPagamentoError] = useState<string | null>(null)
 
   const loadAtividades = useCallback(async () => {
     setLoadingAts(true)
@@ -557,13 +558,15 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
           >
             ⏰ Agendar follow-up
           </button>
-          {cliente.etapa === 'contrato' && !cliente.pagamento_realizado_at && (
+          {cliente.etapa === 'contrato' && (
             <button
               disabled={isPending}
               onClick={() => {
+                setPagamentoError(null)
                 startTransition(async () => {
                   const res = await registrarPagamentoAction(cliente.id)
                   if (res.ok) { onPagamentoRegistrado(cliente.id); onClose() }
+                  else setPagamentoError(res.error ?? 'Erro ao registrar pagamento.')
                 })
               }}
               style={{ flex: 1, padding: '10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: '8px', color: '#34D399', fontSize: '0.8rem', fontWeight: 700, cursor: isPending ? 'wait' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
@@ -571,9 +574,9 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
               {isPending ? 'Registrando...' : '💰 Registrar pagamento'}
             </button>
           )}
-          {cliente.pagamento_realizado_at && (
-            <div style={{ flex: '1 1 100%', padding: '8px 10px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', color: '#34D399', fontSize: '0.78rem', fontWeight: 600 }}>
-              ✓ Pagamento registrado — cliente em execução
+          {pagamentoError && (
+            <div style={{ flex: '1 1 100%', padding: '8px 10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: '8px', color: '#FCA5A5', fontSize: '0.78rem' }}>
+              {pagamentoError}
             </div>
           )}
         </div>
@@ -758,7 +761,7 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
               <DroppableColumn
                 key={col.id}
                 col={col}
-                clientes={clientes.filter((c) => c.etapa === col.id && !c.pagamento_realizado_at)}
+                clientes={clientes.filter((c) => c.etapa === col.id)}
                 onCardClick={(id) => setOpenClienteId(id)}
               />
             ))}
