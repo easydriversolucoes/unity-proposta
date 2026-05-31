@@ -54,9 +54,7 @@ export async function moveClienteAction(
     }
     await createAtividade(clienteId, atividadeTexto, followup ? 'follow_up' : 'nota')
 
-    if (targetEtapa === 'proposta_aprovada') {
-      await criarTarefasPropostaAprovada(clienteId, cliente.tem_suspensao)
-    }
+    // Tasks are created on payment registration, not on proposal approval
 
     revalidatePath('/crm')
     return { ok: true as const }

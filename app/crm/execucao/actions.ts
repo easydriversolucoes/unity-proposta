@@ -32,6 +32,7 @@ export async function updateTarefaAction(
   data: {
     urgente?: boolean
     responsavel?: string
+    fase?: import('@/types/crm').FaseRecurso
     prazo?: string | null
     notas?: string | null
     data_agendamento_envio?: string | null

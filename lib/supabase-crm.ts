@@ -294,11 +294,12 @@ export async function listTarefasAtivas(): Promise<TarefaExecucao[]> {
 }
 
 export async function updateTarefa(id: string, data: Partial<TarefaExecucao>): Promise<void> {
-  const allowed = ['urgente', 'responsavel', 'prazo', 'notas', 'etapa',
+  const allowed = ['urgente', 'responsavel', 'prazo', 'notas', 'etapa', 'fase',
     'data_agendamento_envio', 'data_agendamento_protocolo', 'protocolado_por']
   const patch: Record<string, unknown> = {}
   for (const k of allowed) if (k in data) patch[k] = (data as Record<string, unknown>)[k]
-  await db().from('tarefas_execucao').update(patch).eq('id', id)
+  const { error } = await db().from('tarefas_execucao').update(patch).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function createTarefa(
@@ -318,7 +319,8 @@ export async function createTarefa(
 }
 
 export async function updateTarefaEtapa(id: string, etapa: EtapaTarefa): Promise<void> {
-  await db().from('tarefas_execucao').update({ etapa }).eq('id', id)
+  const { error } = await db().from('tarefas_execucao').update({ etapa }).eq('id', id)
+  if (error) throw new Error(error.message)
 }
 
 export async function arquivarTarefa(id: string, numeroProtocolo?: string): Promise<void> {
