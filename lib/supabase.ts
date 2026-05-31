@@ -95,6 +95,13 @@ export async function approveProposalManually(id: string): Promise<void> {
     .in('status', ['enviada', 'visualizada', 'em_analise'])
 }
 
+export async function marcarPropostaContratada(id: string): Promise<void> {
+  await supabaseAdmin()
+    .from('propostas')
+    .update({ status: 'contratada' })
+    .eq('id', id.toUpperCase())
+}
+
 export async function listProposals(): Promise<Proposal[]> {
   const client = supabaseAdmin()
   const { data, error } = await client

@@ -7,6 +7,7 @@ import {
   createProcesso, createTarefa, clearFollowUp, listFollowUpsAgendados,
   registrarPagamento,
 } from '@/lib/supabase-crm'
+import { marcarPropostaContratada } from '@/lib/supabase'
 import type { EtapaCRM, CreateClienteInput, Atividade } from '@/types/crm'
 import { ETAPA_LABELS } from '@/types/crm'
 
@@ -74,11 +75,7 @@ export async function registrarPagamentoAction(clienteId: string): Promise<{ ok:
 
     // Update proposta to 'contratada' so it leaves the proposals list
     if (cliente.proposta_id) {
-      const { supabaseAdmin } = await import('@/lib/supabase')
-      await supabaseAdmin()
-        .from('propostas')
-        .update({ status: 'contratada' })
-        .eq('id', cliente.proposta_id)
+      await marcarPropostaContratada(cliente.proposta_id).catch(() => {})
     }
 
     // Create execution tasks (if none exist yet)
