@@ -24,6 +24,7 @@ import {
   getClientesAction,
   updateClienteAction,
   scheduleFollowUpAction,
+  registrarPagamentoAction,
 } from '@/app/crm/actions'
 
 // ─── Style helpers ────────────────────────────────────────────────────────────
@@ -416,12 +417,13 @@ function CreateClienteModal({ onClose, onCreated }: { onClose: () => void; onCre
 
 // ─── Cliente Modal (details + activity) ──────────────────────────────────────
 
-function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollowUp }: {
+function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollowUp, onPagamentoRegistrado }: {
   clienteId: string
   clientes: Cliente[]
   onClose: () => void
   onUpdate: (updated: Partial<Cliente> & { id: string }) => void
   onScheduleFollowUp: (clienteId: string) => void
+  onPagamentoRegistrado: (id: string) => void
 }) {
   const cliente = clientes.find((c) => c.id === clienteId)
   const [atividades, setAtividades] = useState<Atividade[]>([])
@@ -534,7 +536,7 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
         )}
 
         {/* Actions row */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <a
             href={`/admin/propostas?nome=${encodeURIComponent(cliente.nome)}&ait=${encodeURIComponent(cliente.ait ?? '')}&cliente_id=${cliente.id}`}
             target="_blank"
@@ -544,17 +546,36 @@ function ClienteModal({ clienteId, clientes, onClose, onUpdate, onScheduleFollow
               flex: 1, display: 'block', textAlign: 'center', padding: '10px',
               background: 'rgba(196,146,42,0.1)', border: '1px solid rgba(196,146,42,0.3)',
               borderRadius: '8px', color: '#E8B84B', fontSize: '0.8rem', fontWeight: 700,
-              textDecoration: 'none',
+              textDecoration: 'none', whiteSpace: 'nowrap',
             }}
           >
             📄 Gerar proposta
           </a>
           <button
             onClick={() => { onScheduleFollowUp(cliente.id); onClose() }}
-            style={{ flex: 1, padding: '10px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '8px', color: '#FBBF24', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+            style={{ flex: 1, padding: '10px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', borderRadius: '8px', color: '#FBBF24', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
           >
             ⏰ Agendar follow-up
           </button>
+          {cliente.etapa === 'contrato' && !cliente.pagamento_realizado_at && (
+            <button
+              disabled={isPending}
+              onClick={() => {
+                startTransition(async () => {
+                  const res = await registrarPagamentoAction(cliente.id)
+                  if (res.ok) { onPagamentoRegistrado(cliente.id); onClose() }
+                })
+              }}
+              style={{ flex: 1, padding: '10px', background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.35)', borderRadius: '8px', color: '#34D399', fontSize: '0.8rem', fontWeight: 700, cursor: isPending ? 'wait' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+            >
+              {isPending ? 'Registrando...' : '💰 Registrar pagamento'}
+            </button>
+          )}
+          {cliente.pagamento_realizado_at && (
+            <div style={{ flex: '1 1 100%', padding: '8px 10px', background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)', borderRadius: '8px', color: '#34D399', fontSize: '0.78rem', fontWeight: 600 }}>
+              ✓ Pagamento registrado — cliente em execução
+            </div>
+          )}
         </div>
 
         <hr style={{ border: 'none', borderTop: '1px solid rgba(26,86,219,0.12)', margin: '0 0 16px' }} />
@@ -737,7 +758,7 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
               <DroppableColumn
                 key={col.id}
                 col={col}
-                clientes={clientes.filter((c) => c.etapa === col.id)}
+                clientes={clientes.filter((c) => c.etapa === col.id && !c.pagamento_realizado_at)}
                 onCardClick={(id) => setOpenClienteId(id)}
               />
             ))}
@@ -780,6 +801,10 @@ export default function CRMBoard({ initialClientes }: { initialClientes: Cliente
             router.refresh()
           }}
           onScheduleFollowUp={(id) => setFollowUpStandaloneId(id)}
+          onPagamentoRegistrado={(id) => {
+            setClientes((prev) => prev.map((c) => c.id === id ? { ...c, pagamento_realizado_at: new Date().toISOString() } : c))
+            router.refresh()
+          }}
         />
       )}
 

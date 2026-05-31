@@ -5,6 +5,7 @@ import {
   listClientes, getCliente, createCliente, updateClienteEtapa, updateCliente,
   createAtividade, listAtividades, linkPropostaToCliente,
   createProcesso, createTarefa, clearFollowUp, listFollowUpsAgendados,
+  registrarPagamento,
 } from '@/lib/supabase-crm'
 import type { EtapaCRM, CreateClienteInput, Atividade } from '@/types/crm'
 import { ETAPA_LABELS } from '@/types/crm'
@@ -57,6 +58,35 @@ export async function moveClienteAction(
     }
 
     revalidatePath('/crm')
+    return { ok: true as const }
+  } catch (err) {
+    return { ok: false as const, error: err instanceof Error ? err.message : 'Erro desconhecido' }
+  }
+}
+
+export async function registrarPagamentoAction(clienteId: string): Promise<{ ok: boolean; error?: string }> {
+  await requireAuth()
+  try {
+    const cliente = await getCliente(clienteId)
+    if (!cliente) throw new Error('Cliente não encontrado')
+
+    await registrarPagamento(clienteId)
+
+    // Update proposta to 'contratada' so it leaves the proposals list
+    if (cliente.proposta_id) {
+      const { supabaseAdmin } = await import('@/lib/supabase')
+      await supabaseAdmin()
+        .from('propostas')
+        .update({ status: 'contratada' })
+        .eq('id', cliente.proposta_id)
+    }
+
+    // Create execution tasks (if none exist yet)
+    await criarTarefasPropostaAprovada(clienteId, cliente.tem_suspensao)
+
+    await createAtividade(clienteId, 'Pagamento registrado — cliente enviado para Execução', 'proposta')
+    revalidatePath('/crm')
+    revalidatePath('/crm/execucao')
     return { ok: true as const }
   } catch (err) {
     return { ok: false as const, error: err instanceof Error ? err.message : 'Erro desconhecido' }

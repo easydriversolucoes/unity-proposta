@@ -6,9 +6,15 @@ export type EtapaCRM =
   | 'proposta_aprovada'
   | 'proposta_recusada'
   | 'contrato'
-  | 'pagamento_realizado'
+  | 'pagamento_realizado' // kept for backwards-compat; not shown in CRM board
 
-export type EtapaTarefa = 'a_redigir' | 'em_redigicao' | 'aguardando_protocolo' | 'protocolado'
+export type EtapaTarefa =
+  | 'a_redigir'
+  | 'envio_agendado'
+  | 'documentos_solicitados'
+  | 'aguardando_protocolo'
+  | 'protocolado'
+
 export type FaseRecurso = 'defesa_previa' | 'jari' | 'cetran'
 export type TipoProcesso = 'infracao' | 'suspensao'
 export type StatusProcesso = 'em_andamento' | 'aguardando_resultado' | 'deferido' | 'indeferido'
@@ -30,6 +36,7 @@ export interface Cliente {
   followup_contagem: number
   followup_canal: string | null
   proposta_id: string | null
+  pagamento_realizado_at: string | null
   created_at: string
 }
 
@@ -69,12 +76,23 @@ export interface TarefaExecucao {
   fase: FaseRecurso
   etapa: EtapaTarefa
   status: 'ativa' | 'arquivada'
+  urgente: boolean
+  responsavel: string
   numero_protocolo: string | null
   prazo: string | null
   notas: string | null
+  data_agendamento_envio: string | null
+  data_agendamento_protocolo: string | null
+  protocolado_por: string | null
   created_at: string
   arquivada_at: string | null
-  clientes?: { nome: string; ait: string | null; tipo_infracao: string | null } | null
+  clientes?: {
+    nome: string
+    ait: string | null
+    tipo_infracao: string | null
+    whatsapp: string | null
+    telefone: string | null
+  } | null
   processos_recurso?: { tipo: TipoProcesso } | null
 }
 
@@ -113,6 +131,7 @@ export const TIPO_PROCESSO_LABELS: Record<TipoProcesso, string> = {
   suspensao: 'Suspensão',
 }
 
+// 'pagamento_realizado' removed from board — clients with that etapa move to execution
 export const CRM_COLUMNS: Array<{ id: EtapaCRM; label: string; color: string }> = [
   { id: 'novo_contato', label: 'Novo contato', color: '#60A5FA' },
   { id: 'aguardando_informacoes', label: 'Aguardando informações', color: '#A78BFA' },
@@ -121,5 +140,4 @@ export const CRM_COLUMNS: Array<{ id: EtapaCRM; label: string; color: string }> 
   { id: 'proposta_aprovada', label: 'Proposta aprovada', color: '#6EE7B7' },
   { id: 'proposta_recusada', label: 'Proposta recusada', color: '#F87171' },
   { id: 'contrato', label: 'Contrato', color: '#C4922A' },
-  { id: 'pagamento_realizado', label: 'Pagamento realizado', color: '#E8B84B' },
 ]

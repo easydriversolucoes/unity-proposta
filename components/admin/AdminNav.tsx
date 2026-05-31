@@ -43,6 +43,15 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: '/admin/contratos',
+    label: 'Contratos',
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
     href: '/admin',
     label: 'Notificações',
     icon: (
@@ -61,6 +70,7 @@ export default function AdminNav({ notifCount }: { notifCount?: number }) {
     if (href === '/crm/execucao') return pathname.startsWith('/crm/execucao')
     if (href === '/admin/propostas') return pathname.startsWith('/admin/propostas')
     if (href === '/followups') return pathname.startsWith('/followups')
+    if (href === '/admin/contratos') return pathname.startsWith('/admin/contratos')
     if (href === '/admin') return pathname === '/admin' || pathname === '/' || pathname.startsWith('/notificacoes')
     return false
   }

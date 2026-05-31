@@ -100,6 +100,31 @@ export async function moverClienteAutomatico(propostaId: string, novaEtapa: Etap
   )
 }
 
+export async function registrarPagamento(clienteId: string): Promise<void> {
+  await db()
+    .from('clientes')
+    .update({ etapa: 'pagamento_realizado', pagamento_realizado_at: new Date().toISOString() })
+    .eq('id', clienteId)
+}
+
+export async function listClientesPagamento(): Promise<Cliente[]> {
+  const { data } = await db()
+    .from('clientes')
+    .select('*')
+    .not('pagamento_realizado_at', 'is', null)
+    .order('pagamento_realizado_at', { ascending: false })
+  return (data ?? []) as Cliente[]
+}
+
+export async function listClientesPagamentoSimples(): Promise<{ id: string; nome: string; ait: string | null; tem_suspensao: boolean; pagamento_realizado_at: string | null }[]> {
+  const { data } = await db()
+    .from('clientes')
+    .select('id, nome, ait, tem_suspensao, pagamento_realizado_at')
+    .not('pagamento_realizado_at', 'is', null)
+    .order('nome', { ascending: true })
+  return (data ?? []) as { id: string; nome: string; ait: string | null; tem_suspensao: boolean; pagamento_realizado_at: string | null }[]
+}
+
 export async function listFollowUpsAgendados(): Promise<Cliente[]> {
   const { data } = await db()
     .from('clientes')
@@ -262,10 +287,18 @@ export async function listProcessosComFases(
 export async function listTarefasAtivas(): Promise<TarefaExecucao[]> {
   const { data } = await db()
     .from('tarefas_execucao')
-    .select('*, clientes(nome, ait, tipo_infracao), processos_recurso(tipo)')
+    .select('*, clientes(nome, ait, tipo_infracao, whatsapp, telefone), processos_recurso(tipo)')
     .eq('status', 'ativa')
     .order('created_at', { ascending: true })
   return (data ?? []) as TarefaExecucao[]
+}
+
+export async function updateTarefa(id: string, data: Partial<TarefaExecucao>): Promise<void> {
+  const allowed = ['urgente', 'responsavel', 'prazo', 'notas', 'etapa',
+    'data_agendamento_envio', 'data_agendamento_protocolo', 'protocolado_por']
+  const patch: Record<string, unknown> = {}
+  for (const k of allowed) if (k in data) patch[k] = (data as Record<string, unknown>)[k]
+  await db().from('tarefas_execucao').update(patch).eq('id', id)
 }
 
 export async function createTarefa(

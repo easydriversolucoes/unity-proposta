@@ -42,7 +42,7 @@ interface Props {
 export default function PropostasListPage({ initialProposals, baseUrl, clienteTelefones, notifCount }: Props) {
   const router = useRouter()
   const [proposals, setProposals] = useState(initialProposals)
-  const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'todas'>('todas')
+  const [statusFilter, setStatusFilter] = useState<ProposalStatus | 'todas' | 'ativas'>('ativas')
   const [search, setSearch] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -57,7 +57,8 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
 
   const filtered = useMemo(() => {
     let list = proposals
-    if (statusFilter !== 'todas') list = list.filter((p) => p.status === statusFilter)
+    if (statusFilter === 'ativas') list = list.filter((p) => p.status !== 'contratada' && p.status !== 'expirada')
+    else if (statusFilter !== 'todas') list = list.filter((p) => p.status === statusFilter)
     if (search.trim()) {
       const q = search.toLowerCase()
       list = list.filter((p) =>
@@ -70,7 +71,10 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
   }, [proposals, statusFilter, search])
 
   const countByStatus = useMemo(() => {
-    const m: Record<string, number> = { todas: proposals.length }
+    const m: Record<string, number> = {
+      todas: proposals.length,
+      ativas: proposals.filter((p) => p.status !== 'contratada' && p.status !== 'expirada').length,
+    }
     for (const s of ALL_STATUSES) m[s] = proposals.filter((p) => p.status === s).length
     return m
   }, [proposals])
@@ -102,7 +106,8 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
     })
   }
 
-  const FILTER_TABS: Array<{ key: ProposalStatus | 'todas'; label: string }> = [
+  const FILTER_TABS: Array<{ key: ProposalStatus | 'todas' | 'ativas'; label: string }> = [
+    { key: 'ativas', label: 'Ativas' },
     { key: 'todas', label: 'Todas' },
     ...ALL_STATUSES.map((s) => ({ key: s, label: STATUS_META[s].label })),
   ]
@@ -155,7 +160,7 @@ export default function PropostasListPage({ initialProposals, baseUrl, clienteTe
           {FILTER_TABS.map(({ key, label }) => {
             const active = statusFilter === key
             const count = countByStatus[key] ?? 0
-            const color = key === 'todas' ? '#60A5FA' : STATUS_META[key as ProposalStatus].color
+            const color = (key === 'todas' || key === 'ativas') ? '#60A5FA' : STATUS_META[key as ProposalStatus].color
             return (
               <button
                 key={key}
